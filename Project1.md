@@ -96,4 +96,21 @@ In this step, I install a Database Management System (DBMS) to be able to store 
 12. Relaod the public IP to see changes to the apache2 default page.
 ![Project1pix19](https://user-images.githubusercontent.com/74002629/176588537-7e43b408-6674-4530-afa8-7e65c69800e8.PNG)
 
-
+### STEP 5 — ENABLE PHP ON THE WEBSITE
+#### Steps
+1. With the default DirectoryIndex settings on Apache, a file named index.html will always take precedence over an index.php file. To make index.php file tak precedence need to edit the /etc/apache2/mods-enabled/dir.conf file and change the order in which the index.php file is listed within the DirectoryIndex directive.
+2. Run: **sudo vim /etc/apache2/mods-enabled/dir.conf** then:
+**<IfModule mod_dir.c>
+        #Change this:
+        #DirectoryIndex index.html index.cgi index.pl index.php index.xhtml index.htm
+        #To this:
+        DirectoryIndex index.php index.html index.cgi index.pl index.xhtml index.htm
+</IfModule>**
+4. Save and close file.
+5. Next, reload Apache so the changes take effect, type: **sudo systemctl reload apache2**
+6. Finally, we will create a PHP script to test that PHP is correctly installed and configured on your server. Create a new file named index.php inside the custom web root folder, run: **vim /var/www/projectlamp/index.php**
+7. This will open a blank file. Add the PHP code: 
+**<?php
+phpinfo();**
+8. Save and close the file, then refresh the page to see changes.
+9. ![Project1pix20](https://user-images.githubusercontent.com/74002629/176642095-d8dbb3b8-ba7f-4772-89d9-6d54c42f35a0.PNG)
