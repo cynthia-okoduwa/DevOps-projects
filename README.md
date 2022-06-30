@@ -1,2 +1,2 @@
-# darey.io-projects
-Where I keep all my Darey.io projects
+# DevOps-projects
+All Darey.io related projects
