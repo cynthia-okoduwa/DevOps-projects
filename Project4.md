@@ -224,11 +224,11 @@ app.controller('myCtrl', function($scope, $http) {
 
 * Then change the directory back up to **Books** using: `cd ..`
 * Now, start the server by running this command: `node server.js` If all goes well server should be up and running and we can connect to it on port 3300.
-* This however was not the case in my test, I keep on getting and error in the picture below.
-* 
+* This however was not the case in my test, I kept on getting an error. see error in the picture below:
+ 
 ![Project4pix15](https://user-images.githubusercontent.com/74002629/177742997-92f09460-b0e5-4e8f-8f60-e79a6a1dd314.PNG)
 
-* After several attempts at trouble shooting I figured out what the issue was. The issue was with my nodejs version. During the installation, I installed version 12 but for some reson version 12 won't work but keeps giving me errors when I attempt to start the sever.
+* After several attempts at troubleshooting I figured out what the issue was. The issue was with my nodejs version. During the installation, I installed version 12 but for some reson version 12 won't work but keeps giving me errors when I attempt to start the sever.
 * I solved this problem by upgrading my node version to version, 17.0.0
 * After this I tried to start the server again and it ran successfully.
 
