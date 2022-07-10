@@ -487,8 +487,29 @@ margin-top: 0;
 }
 }
 ```
+* Next, in the src directory open the index.css: `vim index.css`
+* Copy and paste the code below:
+```
+body {
+margin: 0;
+padding: 0;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+"Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+sans-serif;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+box-sizing: border-box;
+background-color: #282c34;
+color: #787a80;
+}
 
-
+code {
+font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+monospace;
+}
+```
+* Go to the Todo directory: `cd ../..`
+* When you are in the Todo directory run: `npm run dev`
 
 
 
