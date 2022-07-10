@@ -1,4 +1,5 @@
 ## SIMPLE TO-DO APPLICATION ON MERN WEB STACK
+### Task - To deploy a simple To-Do application that creates To-Do lists
 ### STEP 1 – BACKEND CONFIGURATION
 #### Steps
 * Update ubuntu: `sudo apt update`
@@ -20,7 +21,7 @@
 * Run the command `ls` to confirm that you have package.json file created.
 ![MERNpix4](https://user-images.githubusercontent.com/74002629/177170737-eb8054fc-1430-466c-a08f-6cfe408d3630.PNG)
 
-#### INSTALL EXPRESSJS
+##### INSTALL EXPRESSJS
 * To use express, install it using npm: `npm install express`
 * Next, create a file index.js with this command: `touch index.js`
 * Run `ls` to confirm that your **index.js** file is successfully created.
@@ -62,7 +63,7 @@ console.log(`Server running on port ${port}`)
 * Open a browser and access the server’s Public IP or Public DNS name followed by port 5000: `http://<PublicIP-or-PublicDNS>:5000`
 ![MERNpix8](https://user-images.githubusercontent.com/74002629/177174585-ee179ca7-bda4-4ef4-a06e-f99a3d2529b1.PNG)
 
-#### Routes
+##### Routes
 * The To-Do application needs to be able to complete 3 actions:
   * Create a new task
   * Display list of all tasks
@@ -92,7 +93,7 @@ router.delete('/todos/:id', (req, res, next) => {
 module.exports = router;
 ```
 
-### MODELS
+##### MODELS
 * To create a Schema and a model, install mongoose which is a Node.js package that makes working with mongodb easier. Change directory back Todo folder with `cd ..` and install Mongoose with the following command: `npm install mongoose`
 * Create a new folder **models**, then change directory into the newly created **models** folder, Inside the models folder, create a file and name it **todo.js** with the following command: `mkdir models && cd models && touch todo.js`
 * Open the file created with vim todo.js then paste the code below in the file:
@@ -147,8 +148,348 @@ Todo.findOneAndDelete({"_id": req.params.id})
 
 module.exports = router;
 ```
-### MONGODB DATABASE
-* A database is required where data will be stored. For this we will make use of mLab. Sign up for a shared clusters free account, Sign up on https://www.mongodb.com/atlas-signup-from-mlab. Follow the sign up process, select AWS as the cloud provider, and choose a region near you.
+##### MONGODB DATABASE
+* A database is required where data will be stored. For this we will make use of mLab. Sign up for a shared clusters free account, Sign up on https://www.mongodb.com/atlas-signup-from-mlab. Follow the sign up process, select AWS as the cloud provider, and choose a region.
 * For the purposes of this project, allow access to the MongoDB database from anywhere.
 * Make sure you change the time of deleting the entry from 6 Hours to 1 Week
 * Create a MongoDB database and collection inside mLab
+* Next, in the index.js file, we specified **process.env** to access environment variables, but we are yet to create the file. Now, create a file in the **Todo** directory and name it **.env** To do this type: 
+```
+touch .env
+vi .env
+```
+* Then add the connection string to access the database in it, just as below: 
+`DB = 'mongodb+srv://<username>:<password>@<network-address>/<dbname>?retryWrites=true&w=majority'`
+* Update the **index.js** to reflect the use of **.env** so that Node.js can connect to the database. Delete existing content in the file, and update it with the following steps:
+* using vim, follow below steps: Open the file with `vim index.js` and enter. Type`:` then type `%d` and enter. this will delete the entire content. Next, press `i` to enter the insert mode in vim. then, paste the entire code below in the file:
+```
+const express = require('express');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const routes = require('./routes/api');
+const path = require('path');
+require('dotenv').config();
+
+const app = express();
+
+const port = process.env.PORT || 5000;
+
+//connect to the database
+mongoose.connect(process.env.DB, { useNewUrlParser: true, useUnifiedTopology: true })
+.then(() => console.log(`Database connected successfully`))
+.catch(err => console.log(err));
+
+//since mongoose promise is depreciated, we overide it with node's promise
+mongoose.Promise = global.Promise;
+
+app.use((req, res, next) => {
+res.header("Access-Control-Allow-Origin", "\*");
+res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+next();
+});
+
+app.use(bodyParser.json());
+
+app.use('/api', routes);
+
+app.use((err, req, res, next) => {
+console.log(err);
+next();
+});
+
+app.listen(port, () => {
+console.log(`Server running on port ${port}`)
+});
+```
+* Next, start the server using the command: `node index.js`
+* You shall see a message **Database connected successfully**, if so – we have our backend configured. Now we are going to test it.
+
+##### Testing Backend Code without Frontend using RESTful API
+* Beacause we do not have a frontend UI yet. We need ReactJS code to achieve that. But during development, we will need a way to test our code using RESTfulL API. Therefore, we will need to make use of some API development client to test our code. We will use **Postman** to test our API.
+* Create a **POST** request to the API `http://<PublicIP-or-PublicDNS>:5000/api/todos` This request sends a new task to the To-Do list so the application could store it in the database. Also set header key **Content-Type** as **application/json**
+* Create a GET request to your API on `http://<PublicIP-or-PublicDNS>:5000/api/todos` This request retrieves all existing records from the To-do application. 
+
+### Step 2 i Frontend Creation
+* Having completed the functionality of the backend, it is time to create a user interface for a Web client (browser) to interact with the application via API.
+* In the same root directory as your backend code, which is the Todo directory, run: `npx create-react-app client` to create a new folder in your Todo directory called **client**
+##### Running a React App
+* Before testing the react app, there are some dependencies that need to be installed: 
+  * Install concurrently, used to run more than one command simultaneously from the same terminal window. `npm install concurrently --save-dev`
+  * Install nodemon, used to run and monitor the server. If there is any change in the server code, nodemon will restart it automatically and load the new changes. `npm install nodemon --save-dev`
+  * In Todo folder open the **package.json** file. make changes to the **script** replace with the code below:
+```
+"scripts": {
+"start": "node index.js",
+"start-watch": "nodemon index.js",
+"dev": "concurrently \"npm run start-watch\" \"cd client && npm start\""
+},
+```
+##### Configure Proxy in package.json
+* Change directory to **client**: `cd client`
+* Open the package.json file: `vi package.json`
+* Add the key value pair in the package.json file `"proxy": "http://localhost:5000"` The purpose of this is to ensure access to the application directly from the browser by simply calling the server url like **http://localhost:5000** rather than always including the entire path like **http://localhost:5000/api/todos**
+* Navigate to the Todo directory and run: **npm run dev** The app should open and start running on localhost:3000
+* To access the application from the Internet you have to open TCP port 3000 on EC2 by adding a new Security Group rule.
+
+##### Creating your React Components
+* From your Todo directory run: `cd client`
+* move to the src directory: `cd src`
+* Inside your src folder create another folder called components: `mkdir components`
+* Move into the components directory with: `cd components`
+* Inside ‘components’ directory create three files **Input.js**, **ListTodo.js** and **Todo.js**: `touch Input.js ListTodo.js Todo.js`
+* Open Input.js file: `vi Input.js`
+* Paste the following: 
+```
+import React, { Component } from 'react';
+import axios from 'axios';
+
+class Input extends Component {
+
+state = {
+action: ""
+}
+
+addTodo = () => {
+const task = {action: this.state.action}
+
+    if(task.action && task.action.length > 0){
+      axios.post('/api/todos', task)
+        .then(res => {
+          if(res.data){
+            this.props.getTodos();
+            this.setState({action: ""})
+          }
+        })
+        .catch(err => console.log(err))
+    }else {
+      console.log('input field required')
+    }
+
+}
+
+handleChange = (e) => {
+this.setState({
+action: e.target.value
+})
+}
+
+render() {
+let { action } = this.state;
+return (
+<div>
+<input type="text" onChange={this.handleChange} value={action} />
+<button onClick={this.addTodo}>add todo</button>
+</div>
+)
+}
+}
+
+export default Input
+```
+* Move back to the client folder : `cd ../..`
+* In the client folder, install Axios: `npm install axios`
+* Next, go to components directory: `cd src/components`
+* Then open your **ListTodo.js**: `vi ListTodo.js`
+* Paste the following code into the ListTodo.js file:
+```
+import React from 'react';
+
+const ListTodo = ({ todos, deleteTodo }) => {
+
+return (
+<ul>
+{
+todos &&
+todos.length > 0 ?
+(
+todos.map(todo => {
+return (
+<li key={todo._id} onClick={() => deleteTodo(todo._id)}>{todo.action}</li>
+)
+})
+)
+:
+(
+<li>No todo(s) left</li>
+)
+}
+</ul>
+)
+}
+
+export default ListTodo
+```
+* In in the Todo.js file you write the following code:
+```
+import React, {Component} from 'react';
+import axios from 'axios';
+
+import Input from './Input';
+import ListTodo from './ListTodo';
+
+class Todo extends Component {
+
+state = {
+todos: []
+}
+
+componentDidMount(){
+this.getTodos();
+}
+
+getTodos = () => {
+axios.get('/api/todos')
+.then(res => {
+if(res.data){
+this.setState({
+todos: res.data
+})
+}
+})
+.catch(err => console.log(err))
+}
+
+deleteTodo = (id) => {
+
+    axios.delete(`/api/todos/${id}`)
+      .then(res => {
+        if(res.data){
+          this.getTodos()
+        }
+      })
+      .catch(err => console.log(err))
+
+}
+
+render() {
+let { todos } = this.state;
+
+    return(
+      <div>
+        <h1>My Todo(s)</h1>
+        <Input getTodos={this.getTodos}/>
+        <ListTodo todos={todos} deleteTodo={this.deleteTodo}/>
+      </div>
+    )
+
+}
+}
+
+export default Todo;
+```
+* Delete the logo and adjust our App.js. Navigate back to the **src** directory
+* In the src folder run: `vi App.js`
+* Copy and paste the code below into it
+```
+import React from 'react';
+
+import Todo from './components/Todo';
+import './App.css';
+
+const App = () => {
+return (
+<div className="App">
+<Todo />
+</div>
+);
+}
+
+export default App;
+```
+* Next, in the src directory open the App.css using: `vi App.css`
+* Then paste the following code into App.css:
+```
+.App {
+text-align: center;
+font-size: calc(10px + 2vmin);
+width: 60%;
+margin-left: auto;
+margin-right: auto;
+}
+
+input {
+height: 40px;
+width: 50%;
+border: none;
+border-bottom: 2px #101113 solid;
+background: none;
+font-size: 1.5rem;
+color: #787a80;
+}
+
+input:focus {
+outline: none;
+}
+
+button {
+width: 25%;
+height: 45px;
+border: none;
+margin-left: 10px;
+font-size: 25px;
+background: #101113;
+border-radius: 5px;
+color: #787a80;
+cursor: pointer;
+}
+
+button:focus {
+outline: none;
+}
+
+ul {
+list-style: none;
+text-align: left;
+padding: 15px;
+background: #171a1f;
+border-radius: 5px;
+}
+
+li {
+padding: 15px;
+font-size: 1.5rem;
+margin-bottom: 15px;
+background: #282c34;
+border-radius: 5px;
+overflow-wrap: break-word;
+cursor: pointer;
+}
+
+@media only screen and (min-width: 300px) {
+.App {
+width: 80%;
+}
+
+input {
+width: 100%
+}
+
+button {
+width: 100%;
+margin-top: 15px;
+margin-left: 0;
+}
+}
+
+@media only screen and (min-width: 640px) {
+.App {
+width: 60%;
+}
+
+input {
+width: 50%;
+}
+
+button {
+width: 30%;
+margin-left: 10px;
+margin-top: 0;
+}
+}
+```
+
+
+
+
+
+
