@@ -92,6 +92,7 @@ router.delete('/todos/:id', (req, res, next) => {
 
 module.exports = router;
 ```
+![Project3pix7](https://user-images.githubusercontent.com/74002629/178157087-65c46d72-f37c-4abb-b54e-0928c5859093.PNG)
 
 ##### MODELS
 * To create a Schema and a model, install mongoose which is a Node.js package that makes working with mongodb easier. Change directory back Todo folder with `cd ..` and install Mongoose with the following command: `npm install mongoose`
@@ -114,6 +115,8 @@ const Todo = mongoose.model('todo', TodoSchema);
 
 module.exports = Todo;
 ```
+![Project3pix8](https://user-images.githubusercontent.com/74002629/178157090-b669e929-07e1-4735-b13a-7a26ee500df0.PNG)
+
 * Next, we update our routes from the file api.js in ‘routes’ directory to make use of the new model. In routes directory, open api.js with **vim api.js**, delete the code inside with `:%d` command and paste there code below into it then save and exit
 ```
 const express = require ('express');
@@ -148,11 +151,15 @@ Todo.findOneAndDelete({"_id": req.params.id})
 
 module.exports = router;
 ```
+![Project3pix9](https://user-images.githubusercontent.com/74002629/178157101-3211a910-daac-431e-96c7-4265ddbe034f.PNG)
+
 ##### MONGODB DATABASE
 * A database is required where data will be stored. For this we will make use of mLab. Sign up for a shared clusters free account, Sign up on https://www.mongodb.com/atlas-signup-from-mlab. Follow the sign up process, select AWS as the cloud provider, and choose a region.
 * For the purposes of this project, allow access to the MongoDB database from anywhere.
 * Make sure you change the time of deleting the entry from 6 Hours to 1 Week
 * Create a MongoDB database and collection inside mLab
+![Project3pix10](https://user-images.githubusercontent.com/74002629/178157103-61393f4f-89da-4382-bdf1-425d50e5ae64.PNG)
+
 * Next, in the index.js file, we specified **process.env** to access environment variables, but we are yet to create the file. Now, create a file in the **Todo** directory and name it **.env** To do this type: 
 ```
 touch .env
@@ -202,19 +209,26 @@ console.log(`Server running on port ${port}`)
 });
 ```
 * Next, start the server using the command: `node index.js`
+![Project3pix12](https://user-images.githubusercontent.com/74002629/178157109-37edc16f-a217-4d5c-8fe7-a26d79d5d708.PNG)
+
 * You shall see a message **Database connected successfully**, if so – we have our backend configured. Now we are going to test it.
 
 ##### Testing Backend Code without Frontend using RESTful API
 * Beacause we do not have a frontend UI yet. We need ReactJS code to achieve that. But during development, we will need a way to test our code using RESTfulL API. Therefore, we will need to make use of some API development client to test our code. We will use **Postman** to test our API.
 * Create a **POST** request to the API `http://<PublicIP-or-PublicDNS>:5000/api/todos` This request sends a new task to the To-Do list so the application could store it in the database. Also set header key **Content-Type** as **application/json**
-* Create a GET request to your API on `http://<PublicIP-or-PublicDNS>:5000/api/todos` This request retrieves all existing records from the To-do application. 
+![Project3pix13](https://user-images.githubusercontent.com/74002629/178157113-44450534-533d-4f0a-b3f4-28a47eabe997.PNG)
 
-### Step 2 i Frontend Creation
+* Create a GET request to your API on `http://<PublicIP-or-PublicDNS>:5000/api/todos` This request retrieves all existing records from the To-do application. 
+![Project3pix14](https://user-images.githubusercontent.com/74002629/178157115-d56496b0-963c-4e61-a225-b7a2dcbd43a0.PNG)
+
+### Step 2 Frontend Creation
 * Having completed the functionality of the backend, it is time to create a user interface for a Web client (browser) to interact with the application via API.
 * In the same root directory as your backend code, which is the Todo directory, run: `npx create-react-app client` to create a new folder in your Todo directory called **client**
 ##### Running a React App
 * Before testing the react app, there are some dependencies that need to be installed: 
   * Install concurrently, used to run more than one command simultaneously from the same terminal window. `npm install concurrently --save-dev`
+  ![Project3pix15](https://user-images.githubusercontent.com/74002629/178157404-46662611-72b7-4815-bba6-027735a0f529.PNG)
+  
   * Install nodemon, used to run and monitor the server. If there is any change in the server code, nodemon will restart it automatically and load the new changes. `npm install nodemon --save-dev`
   * In Todo folder open the **package.json** file. make changes to the **script** replace with the code below:
 ```
@@ -228,7 +242,12 @@ console.log(`Server running on port ${port}`)
 * Change directory to **client**: `cd client`
 * Open the package.json file: `vi package.json`
 * Add the key value pair in the package.json file `"proxy": "http://localhost:5000"` The purpose of this is to ensure access to the application directly from the browser by simply calling the server url like **http://localhost:5000** rather than always including the entire path like **http://localhost:5000/api/todos**
+![Project3pix16](https://user-images.githubusercontent.com/74002629/178157406-6c92c69c-17ab-46b5-ba89-c3f1a8b8f58c.PNG)
+
 * Navigate to the Todo directory and run: **npm run dev** The app should open and start running on localhost:3000
+![Project3pix17](https://user-images.githubusercontent.com/74002629/178157411-9c42cf2a-e341-4354-adb4-877143615238.PNG)
+![Project3pix18](https://user-images.githubusercontent.com/74002629/178157412-47c64568-4685-454c-a487-0f579a5118d9.PNG)
+
 * To access the application from the Internet you have to open TCP port 3000 on EC2 by adding a new Security Group rule.
 
 ##### Creating your React Components
@@ -286,8 +305,12 @@ return (
 
 export default Input
 ```
+![Project3pix19](https://user-images.githubusercontent.com/74002629/178157415-98401d13-c511-4fa0-96e9-0efb7fd3ce20.PNG)
+
 * Move back to the client folder : `cd ../..`
 * In the client folder, install Axios: `npm install axios`
+![Project3pix20](https://user-images.githubusercontent.com/74002629/178157419-58d5c4d8-adf0-42a2-99bb-08e01c4aee35.PNG)
+
 * Next, go to components directory: `cd src/components`
 * Then open your **ListTodo.js**: `vi ListTodo.js`
 * Paste the following code into the ListTodo.js file:
@@ -510,6 +533,11 @@ monospace;
 ```
 * Go to the Todo directory: `cd ../..`
 * When you are in the Todo directory run: `npm run dev`
+![Project3pix23](https://user-images.githubusercontent.com/74002629/178183189-a96c8436-e168-4625-a06e-ed2a9c229150.PNG)
+
+* Assuming no errors when saving all these files, our To-Do app should be ready and fully functional with all the functionality working: creating a task, deleting a task and viewing all your tasks.
+![Project3pix24](https://user-images.githubusercontent.com/74002629/178183198-07a6fa06-a735-4473-9df3-5ec427474a0e.PNG)
+
 
 
 
