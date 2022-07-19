@@ -36,4 +36,15 @@ sudo mkfs -t ext4 /dev/webdata-vg/logs-lv
 19. Use **rsync** utility to backup all the files in the log directory **/var/log** into **/home/recovery/logs** (It is important to backup all data on the /var/log directory because all the data will be deleted during the mount process) Type the following command: `sudo rsync -av /var/log/. /home/recovery/logs/`
 20. Mount /var/log on logs-lv logical volume: `sudo mount /dev/webdata-vg/logs-lv /var/log` 
 21. Finally, restore deleted log files back into /var/log directory: `sudo rsync -av /home/recovery/logs/. /var/log`
-22. 
+22. Next, update **/etc/fstab** file so that the mount configuration will persist after restart of the server.
+23. The UUID of the device will be used to update the /etc/fstab file to get the UUID type: `sudo blkid` and copy the logs-vg UUID (Excluding the double quotes)
+24. Type sudo `vi /etc/fstab` to open editor and update using the UUID you copied.
+25. Test the configuration and reload the daemon: 
+```
+sudo mount -a`
+sudo systemctl daemon-reload
+```
+26. Verify your setup by running `df -h`
+
+### Part 2 -Install WordPress and connect it to a remote MySQL database server.
+
