@@ -37,7 +37,7 @@ sudo mkfs -t ext4 /dev/webdata-vg/logs-lv
 20. Mount /var/log on logs-lv logical volume: `sudo mount /dev/webdata-vg/logs-lv /var/log` 
 21. Finally, restore deleted log files back into /var/log directory: `sudo rsync -av /home/recovery/logs/. /var/log`
 22. Next, update **/etc/fstab** file so that the mount configuration will persist after restart of the server.
-23. The UUID of the device will be used to update the /etc/fstab file to get the UUID type: `sudo blkid` and copy the logs-vg UUID (Excluding the double quotes)
+23. The UUID of the device will be used to update the /etc/fstab file to get the UUID type: `sudo blkid` and copy the both the apps-vg and logs-vg UUID (Excluding the double quotes)
 24. Type sudo `vi /etc/fstab` to open editor and update using the UUID you copied.
 25. Test the configuration and reload the daemon: 
 ```
@@ -46,5 +46,43 @@ sudo systemctl daemon-reload
 ```
 26. Verify your setup by running `df -h`
 
-### Part 2 -Install WordPress and connect it to a remote MySQL database server.
+### Part 2 - Prepare the Database Server
+27. Launch a second RedHat EC2 instance and name it **DB Server**
+28. Repeat the same steps as for the Web Server, but instead of **apps-lv** create **db-lv** and mount it to **/db** directory instead of /var/www/html/.
+
+### Part 3 -Install WordPress and connect it to a remote MySQL database server.
+29. Update the repository: `sudo yum -y update`
+30. Install wget, Apache and it’s dependencies: `sudo yum -y install wget httpd php php-mysqlnd php-fpm php-json`
+31. Start Apache
+```
+sudo systemctl enable httpd
+sudo systemctl start httpd
+```
+32. install PHP and it’s depemdencies:
+```
+sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+sudo yum install yum-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm
+sudo yum module list php
+sudo yum module reset php
+sudo yum module enable php:remi-7.4
+sudo yum install php php-opcache php-gd php-curl php-mysqlnd
+sudo systemctl start php-fpm
+sudo systemctl enable php-fpm
+setsebool -P httpd_execmem 1
+```
+33. Restart Apache: `sudo systemctl restart httpd`
+34. Download wordpress and copy wordpress to var/www/html
+```
+mkdir wordpress
+cd   wordpress
+sudo wget http://wordpress.org/latest.tar.gz
+sudo tar xzvf latest.tar.gz
+sudo rm -rf latest.tar.gz
+cp wordpress/wp-config-sample.php wordpress/wp-config.php
+cp -R wordpress /var/www/html/
+35. Configure SELinux Policies:
+```
+sudo chown -R apache:apache /var/www/html/wordpress
+sudo chcon -t httpd_sys_rw_content_t /var/www/html/wordpress -R
+sudo setsebool -P httpd_can_network_connect=1
 
