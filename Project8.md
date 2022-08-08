@@ -1,5 +1,4 @@
 # LOAD BALANCER SOLUTION WITH APACHE
-brief intro
 ![Capture](https://user-images.githubusercontent.com/74002629/183334671-0641051c-31e2-44e9-950c-b2f7197b6343.PNG)
 ### Step 1 Configure Apache As A Load Balancer 
 1. Create an Ubuntu Server 20.04 EC2 instance and name it **Project-8-apache-lb**.
