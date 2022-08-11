@@ -1,2 +1,2 @@
 # DevOps-projects
-All Darey.io related projects
+All DevOps related projects
