@@ -47,28 +47,21 @@ sudo systemctl status nginx
 1. Register a domain name with any registrar of your choice in any domain zone (e.g. .com, .net, .org, .edu, .info, .xyz or any other)
 2. Assign an Elastic IP to your Nginx LB server and associate your domain name with this Elastic IP
 3. Create a static IP address, allocate the Elastic IP and associate it with an EC2 server to ensure your IP remain the same everytime you restart the instance.
-4. Update A record in your registrar to point to Nginx LB using Elastic IP address
-Learn how associate your domain name to your Elastic IP on this page.
-
-Side Self Study: Read about different DNS record types and learn what they are used for.
-
-Check that your Web Servers can be reached from your browser using new domain name using HTTP protocol – http://<your-domain-name.com>
-
-Configure Nginx to recognize your new domain name
-Update your nginx.conf with server_name www.<your-domain-name.com> instead of server_name www.domain.com
-
-Install certbot and request for an SSL/TLS certificate
-Make sure snapd service is active and running
-
-sudo systemctl status snapd
-Install certbot
-
-sudo snap install --classic certbot
-Request your certificate (just follow the certbot instructions – you will need to choose which domain you want your certificate to be issued for, domain name will be looked up from nginx.conf file so make sure you have updated it on step 4).
-
+4. Update **A record** in your registrar to point to Nginx LB using Elastic IP address
+5. Check that your Web Servers can be reached from your browser using new domain name using HTTP protocol – http://buildwithme.link
+6. Configure Nginx to recognize your new domain name, update your nginx.conf with server_name www.buildwithme.link instead of server_name www.domain.com
+7. Next, install certbot and request for an SSL/TLS certificate, make sure snapd service is active and running: `sudo systemctl status snapd`
+8. Install certbot: `sudo snap install --classic certbot`
+9. Request your certificate (just follow the certbot instructions – you will need to choose which domain you want your certificate to be issued for, domain name will be looked up from nginx.conf file so make sure you have updated it on step 4).
+```
 sudo ln -s /snap/bin/certbot /usr/bin/certbot
 sudo certbot --nginx
-Test secured access to your Web Solution by trying to reach https://<your-domain-name.com>
+```
+10. Test secured access to your Web Solution by trying to reach https://buildwithme.link, if successful, you will be able to access your website by using HTTPS protocol (that uses TCP port 443) and see a padlock pictogram in your browser’s search string. Click on the padlock icon and you can see the details of the certificate issued for your website.
 
-You shall be able to access your website by using HTTPS protocol (that uses TCP port 443) and see a padlock pictogram in your browser’s search string.
-Click on the padlock icon and you can see the details of the certificate issued for your website.
+#### Step 3 - Set up periodical renewal of your SSL/TLS certificate
+
+1. By default, LetsEncrypt certificate is valid for 90 days, so it is recommended to renew it at least every 60 days or more frequently. You can test renewal command in dry-run mode: `sudo certbot renew --dry-run`
+2. Best pracice is to have a scheduled job to run renew command periodically. Let us configure a cronjob to run the command twice a day. To do so, edit the crontab file with the following command: `crontab -e`
+3. Add following line: `* */12 * * *   root /usr/bin/certbot renew > /dev/null 2>&1`
+4. You can always change the interval of this cronjob if twice a day is too often by adjusting schedule expression.
