@@ -8,8 +8,10 @@
 
 ### Install and configure Ansible client to act as a Jump Server/Bastion Host
 
+An SSH jump server is a regular Linux server, accessible from the Internet, which is used as a gateway to access other Linux machines on a private network using the SSH protocol. Sometimes an SSH jump server is also called a “jump host” or a “bastion host”. The purpose of an SSH jump server is to be the only gateway for access to your infrastructure reducing the size of any potential attack surface.
+
 #### Step 1 - INSTALL AND CONFIGURE ANSIBLE ON EC2 INSTANCE
-1. Update Name tag on your Jenkins EC2 Instance to **Jenkins-Ansible**. This server will be used to run playbooks.
+1. Continuating from [project 9](https://github.com/cynthia-okoduwa/DevOps-projects/blob/main/Project9.md), update Name tag on your Jenkins EC2 Instance to **Jenkins-Ansible**. This server will be used to run playbooks.
 2. In your GitHub account create a new repository and name it **ansible-config-mgt**.
 3. In your **Jenkin-Ansible** server, instal **Ansible**
 ```
