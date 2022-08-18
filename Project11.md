@@ -1,4 +1,6 @@
-# ANSIBLE CONFIGURATION MANAGEMENT – AUTOMATE PROJECT 7 TO 10
+## ANSIBLE CONFIGURATION MANAGEMENT – AUTOMATE PROJECT 7 TO 10
+
+![Capture1](https://user-images.githubusercontent.com/74002629/185382955-28d67f00-8b19-4caa-8dd2-048cea6c0b74.PNG)
 
 #### Task
 1. Install and configure Ansible client to act as a Jump Server/Bastion Host
@@ -15,17 +17,23 @@ sudo apt update
 sudo apt install ansible
 ```
 4. Check your Ansible version by running `ansible --version`
-5. Configure Jenkins build job to save your repository content every time you change it. (See project 9 for detailed steps)
+5. Configure Jenkins build job to save your repository content every time you change it. See [project 9](https://github.com/cynthia-okoduwa/DevOps-projects/blob/main/Project9.md) for detailed steps
   - Create a new Freestyle project ansible in Jenkins and point it to your **ansible-config-mgt** repository.
   - Configure Webhook in GitHub and set webhook to trigger ansible build.
+  ![pix1](https://user-images.githubusercontent.com/74002629/185372369-e33c094e-f075-4bdc-a4f3-e8dad525b60d.PNG)
+  
   - Configure a Post-build job to save all (**) files. 
   - Test your setup by making some change in README.MD file in master branch and make sure that builds starts automatically and Jenkins saves 
     the files (build artifacts) in following folder `ls /var/lib/jenkins/jobs/ansible/builds/<build_number>/archive/`
+  ![pix2](https://user-images.githubusercontent.com/74002629/185372377-a6e7429c-e066-40f6-a098-961d3681b14f.PNG)
+  ![pix6](https://user-images.githubusercontent.com/74002629/185372410-082abc5b-7212-4a42-bb20-532118c46458.PNG)
     
 #### Step 2 – Prepare your development environment using Visual Studio Code
 1. Install Visual Studio Code (VSC)- an Integrated development environment (IDE) or Source-code Editor. You can get it [here](https://code.visualstudio.com/download)
 2. After you have successfully installed VSC, configure it to connect to your newly created GitHub repository.
 3. Clone down your ansible-config-mgt repo to your Jenkins-Ansible instance: `git clone <ansible-config-mgt repo link>`
+
+### Create a simple Ansible playbook to automate servers configuration
 
 #### Step 3 - Begin Ansible development
 1. In your **ansible-config-mgt** GitHub repository, create a new branch that will be used for development of a new feature.
@@ -45,9 +53,11 @@ eval `ssh-agent -s`
 ssh-add <path-to-private-key>
 ```
 3. Confirm the key has been added with this command, you should see the name of your key: `ssh-add -l`
-4. Now, ssh into your Jenkins-Ansible server using ssh-agent: `ssh -A ubuntu@public-ip`
-5. Also notice, that your ubuntu user is ubuntu and user for RHEL-based servers is ec2-user.
-6. Update your inventory/dev.yml file with this snippet of code:
+![pix8](https://user-images.githubusercontent.com/74002629/185372433-a4eb4ba5-d290-422b-91e6-8a5260e0dad5.PNG)
+
+5. Now, ssh into your Jenkins-Ansible server using ssh-agent: `ssh -A ubuntu@public-ip`
+6. Also notice, that your ubuntu user is ubuntu and user for RHEL-based servers is ec2-user.
+7. Update your inventory/dev.yml file with this snippet of code:
 ```
 [nfs]
 <NFS-Server-Private-IP-Address> ansible_ssh_user='ec2-user'
@@ -62,6 +72,7 @@ ssh-add <path-to-private-key>
 [lb]
 <Load-Balancer-Private-IP-Address> ansible_ssh_user='ubuntu'
 ```
+![pix11](https://user-images.githubusercontent.com/74002629/185373588-0cb4a21a-d0a6-4bb3-9c21-475bc402011f.PNG)
 
 #### Step 5 – Create a Common Playbook
 Now we give Ansible the instructions on what you needs to be performed on all servers listed in **inventory/dev**. In **common.yml** playbook you will write configuration for repeatable, re-usable, and multi-machine tasks that is common to systems within the infrastructure.
@@ -94,6 +105,8 @@ Now we give Ansible the instructions on what you needs to be performed on all se
         name: wireshark
         state: latest
 ```
+![pix12](https://user-images.githubusercontent.com/74002629/185373600-c9815226-51e1-4e1a-ac92-b17b2e3713ea.PNG)
+
 2. This playbook is divided into two parts, each of them is intended to perform the same task: install **wireshark utility** (or make sure it is updated to the latest version) on your RHEL 8 and Ubuntu servers. It uses **root** user to perform this task and respective package manager: **yum** for RHEL 8 and **apt** for Ubuntu.
 3. For a better understanding of Ansible playbooks – [watch this video](https://www.youtube.com/watch?v=ZAdJ7CdN7DY) and read [this article](https://www.redhat.com/en/topics/automation/what-is-an-ansible-playbook) from Redhat.
 
@@ -104,12 +117,19 @@ Now we give Ansible the instructions on what you needs to be performed on all se
 git status
 git add <selected files>
 git commit -m "commit message"
-git push
 ```
+4. Create a Pull request (PR)
+![pix14](https://user-images.githubusercontent.com/74002629/185374143-0881f820-48ac-4ff6-bafe-4a8d9c180341.PNG)
+
 3. Once your code changes appear in master branch – Jenkins will do its job and save all the files (build artifacts) to **/var/lib/jenkins/jobs/ansible/builds/<build_number>/archive/** directory on Jenkins-Ansible server.
+
+![pix17](https://user-images.githubusercontent.com/74002629/185374194-509b7ab2-0007-46ac-8e78-836a249ec73c.PNG)
 
 #### Step 7 – Run Ansible test
 1. Now, it is time to execute ansible-playbook command and verify if your playbook actually works: `cd ansible-config-mgt`
 2. Run ansible-playbook command: `ansible-playbook -i inventory/dev.yml playbooks/common.yml`
-3. If your command runs successfully, go to each of the servers and check if wireshark has been installed by running `which wireshark` or `wireshark --version`
-4. 
+![pix20](https://user-images.githubusercontent.com/74002629/185374713-40418adb-3758-4b45-823e-a2825607d3f5.PNG)
+
+4. If your command ran successfully, go to each of the servers and check if wireshark has been installed by running `which wireshark` or `wireshark --version`
+![pix22](https://user-images.githubusercontent.com/74002629/185374839-0f2a05ba-78f7-44c5-abc6-d72c84c258de.PNG)
+![pix23](https://user-images.githubusercontent.com/74002629/185374858-d24eacde-dbf0-46f9-a3e5-72ede5f3b0cd.PNG)
