@@ -105,7 +105,7 @@ ansible-playbook -i inventory/dev.yml playbooks/site.yaml
 1. Launch 2 fresh EC2 instances using RHEL 8 image, name them accordingly – Web1-UAT and Web2-UAT.
 2. To create a role, you must create a directory called **roles/**, relative to the playbook file or in **/etc/ansible/ directory**.
 3. The entire folder structure should look like below:
-``
+```
 └── webserver
     ├── README.md
     ├── defaults
@@ -117,7 +117,7 @@ ansible-playbook -i inventory/dev.yml playbooks/site.yaml
     ├── tasks
     │   └── main.yml
     └── templates
-``
+```
 4. Update your inventory **ansible-config-mgt/inventory/uat.yml** file with IP addresses of your 2 UAT Web servers.
 ```
 [uat-webservers]
