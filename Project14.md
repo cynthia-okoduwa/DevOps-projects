@@ -22,6 +22,15 @@
 focus will be mainly on the CI, Dev and Pentest Enviroments 
 
 3. Ansible roles for the CI environment. In addition to the previous Ansible roles from project 13, in your ansibile-config-mgt repo add 2 more roles: [Sonarqube](https://www.sonarqube.org/) and [Artifactory](https://jfrog.com/artifactory/).
+
+### Phase 1
+##### Prepare your Jenkins server
+1. Set up SSH-agent:
+2. Connect to the instance on VScode.
+3. In stall the following packages and dependencies on the server:
+- Install git :
+- Clone dwn the Asible-config-mgt repository.
+- Install Jenkins and its dependencies. Steps to install Jenkins can be found [here](https://www.jenkins.io/doc/book/installing/)
 4. Configure Ansible For Jenkins Deployment. See [Project 9](https://github.com/cynthia-okoduwa/DevOps-projects/blob/main/Project9.md) for the initial setup of Jenkins. Here I will be comfiguring Jenkins to run Ansible commands in Jenkins UI.
 - Navigate to Jenkins URL: `<Jenkins-server-public-IP>:8080
 - In the Jenkins dashboard, click on manage plugins and search for Blue Ocean plugin. Install and open Blue Ocean plugin.
