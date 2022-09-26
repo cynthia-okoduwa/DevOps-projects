@@ -115,9 +115,100 @@ Currently we only have the Build stage. Let us add another stage called Test. Pa
 ### Phase 2
 1. Install Ansible on Jenkins your ubuntu VM. Follow the steps in this link to insall [Ansible](https://www.cyberciti.biz/faq/how-to-install-and-configure-latest-version-of-ansible-on-ubuntu-linux/)
 2. Install Ansible plugin in Jenkins UI
-Creating Jenkinsfile from scratch. (Delete all you currently have in there and start all over to get Ansible to run successfully) Note: Ensure that Ansible runs against the **Dev** environment successfully.
+3. Create Jenkinsfile from scratch. (Delete all you currently have in there and start all over to get Ansible to run successfully) Note: Ensure that Ansible runs against the **Dev** environment successfully. 
+```
+pipeline {
+  agent any
+
+  environment {
+      ANSIBLE_CONFIG="${WORKSPACE}/deploy/ansible.cfg"
+    }
+
+  stages {
+      stage("Initial cleanup") {
+          steps {
+            dir("${WORKSPACE}") {
+              deleteDir()
+            }
+          }
+        }
+
+      stage('Checkout SCM') {
+         steps{
+            git branch: 'main', url: 'https://github.com/cynthia-okoduwa/ansible-config-mgt.git'
+         }
+       }
+
+      stage('Prepare Ansible For Execution') {
+        steps {
+          sh 'echo ${WORKSPACE}' 
+          sh 'sed -i "3 a roles_path=${WORKSPACE}/roles" ${WORKSPACE}/deploy/ansible.cfg'  
+        }
+     }
+
+      stage('Run Ansible playbook') {
+        steps {
+           ansiblePlaybook become: true, credentialsId: 'private-key', disableHostKeyChecking: true, installation: 'ansible', inventory: 'inventory/dev, playbook: 'playbooks/site.yml'
+         }
+      }
+
+      stage('Clean Workspace after build') {
+        steps{
+          cleanWs(cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenUnstable: true, deleteDirs: true)
+        }
+      }
+   }
+
+}
+```
 
 **Some possible errors to watch out for:**
-- Ensure that the git module in Jenkinsfile is checking out SCM to **main** branch instead of **master** (GitHub has discontinued the use of Master due to Black Lives Matter)
-- Jenkins needs to export the ANSIBLE_CONFIG environment variable. You can put the .ansible.cfg file alongside Jenkinsfile in the deploy directory. This way, anyone can easily identify that everything in there relates to deployment. Then, using the Pipeline Syntax tool in Ansible, generate the syntax to create environment variables to set.
+- Ensure that the git module in Jenkinsfile is checking out SCM to **main** branch instead of **master** (GitHub has discontinued the use of Master)
+- Jenkins needs to export the ANSIBLE_CONFIG environment variable. You can put the .ansible.cfg file alongside Jenkinsfile in the deploy directory. This way, anyone can easily identify that everything in there relates to deployment. Then, using the Pipeline Syntax tool in Ansible, generate the syntax to create environment variables to set. Enter this into the ancible.cfg file:
+```[defaults]
+timeout = 160
+callback_whitelist = profile_tasks
+log_path=~/ansible.log
+host_key_checking = False
+gathering = smart
+ansible_python_interpreter=/usr/bin/python3
+allow_world_readable_tmpfiles=true
 
+
+[ssh_connection]
+ssh_args = -o ControlMaster=auto -o ControlPersist=30m -o ControlPath=/tmp/ansible-ssh-%h-%p-%r -o ServerAliveInterval=60 -o ServerAliveCountMax=60 -o ForwardAgent=yes
+```
+- Remember that ansible.cfg must be exported to environment variable so that Ansible knows where to find **Roles**. But because you will possibly run Jenkins from different git branches, the location of Ansible roles will change. Therefore, you must handle this dynamically. You can use Linux Stream Editor sed to update the section roles_path each time there is an execution. You may not have this issue if you run only from the main branch.
+
+- If you push new changes to Git so that Jenkins failure can be fixed. You might observe that your change may sometimes have no effect. Even though your change is the actual fix required. This can be because Jenkins did not download the latest code from GitHub. Ensure that you start the Jenkinsfile with a clean up step to always delete the previous workspace before running a new one. Sometimes you might need to login to the Jenkins Linux server to verify the files in the workspace to confirm that what you are actually expecting is there. Otherwise, you can spend hours trying to figure out why Jenkins is still failing, when you have pushed up possible changes to fix the error.
+
+- Another possible reason for Jenkins failure sometimes, is because you have indicated in the Jenkinsfile to check out the main git branch, and you are running a pipeline from another branch. So, always verify by logging onto the Jenkins box to check the workspace, and run git branch command to confirm that the branch you are expecting is there.
+4. Parameterizing Jenkinsfile For Ansible Deployment. So far we have been deploying to dev environment, what if we need to deploy to other environments? We will use parameterization so that at the point of execution, the appropriate values are applied. To parameterize Jenkinsfile For Ansible Deployment, Update CI inventory with new servers
+```
+[tooling]
+<SIT-Tooling-Web-Server-Private-IP-Address>
+
+[todo]
+<SIT-Todo-Web-Server-Private-IP-Address>
+
+[nginx]
+<SIT-Nginx-Private-IP-Address>
+
+[db:vars]
+ansible_user=ec2-user
+ansible_python_interpreter=/usr/bin/python
+
+[db]
+<SIT-DB-Server-Private-IP-Address>
+```
+5. Update Jenkinsfile to introduce parameterization. Below is just one parameter. It has a default value in case if no value is specified at execution. It also has a description so that everyone is aware of its purpose.
+```
+pipeline {
+    agent any
+
+    parameters {
+      string(name: 'inventory', defaultValue: 'dev',  description: 'This is the inventory file for the environment to deploy configuration')
+    }
+...
+```
+6. In the Ansible execution section of the Jenkinsfile, remove the hardcoded inventory/dev and replace with `${inventory}
