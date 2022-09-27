@@ -4,7 +4,7 @@
 
 
 ##### Prerequsites
-1. Servers: You will require 6 servers for the project which includes:
+1. Servers: I will be making use of AWS virtual machines for this and will require 6 servers for the project which includes:
 - nginx server: This would act as the reverse proxy server to our site and tool. 
 - Jenkins server: To be used to implement your CI/CD workflows or pipelines. Select a t2.medium at least, Ubuntu 20.04 and Security group should be open to port 8080
 - SonarQube server: To be used for Code quality analysis. Select a t2.medium at least, Ubuntu 20.04 and Security group should be open to port 9000
@@ -49,7 +49,7 @@ ssh-add <path-to-private-key>
 - Select GitHub as where you store your code.
 ![pix3](https://user-images.githubusercontent.com/74002629/192139882-c6beac02-30eb-4a06-8206-41f087948fc4.PNG)
 
-- Create Access token, then enter the newly create Access token. Login to GitHub & Generate an Access
+- Create access token, then enter the newly create access token. Login to GitHub & generate an Access
 ![pix4](https://user-images.githubusercontent.com/74002629/192139886-5f9d8281-2222-454a-9563-73711414fecc.PNG)
  
 - Copy Access token and paste in the new pipeline, then connect.
