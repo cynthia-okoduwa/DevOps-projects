@@ -211,18 +211,19 @@ pipeline {
     }
 ...
 ```
-6. In the Ansible execution section of the Jenkinsfile, remove the hardcoded inventory/dev and replace with `${inventory}
+6. In the Ansible execution section of the Jenkinsfile, remove the hardcoded inventory/dev and replace with `${inventory}`
 
 ## DEPLOYING A CI/CD PIPELINE FOR TODO APPLICATION
 
 Our goal here is to deploy the Todo application onto servers directly from **Artifactory** rather than from **git**. 
-1. Updated Ansible with an Artifactory role, simply use this guide to create an Ansible role for Artifactory (ignore the Nginx part). Configure Artifactory on Ubuntu 20.04
-2. Fork the repository below into your GitHub account
+1. Updated Ansible with an Artifactory role, use this guide to create an Ansible role for Artifactory (ignore the Nginx part). [Configure Artifactory on Ubuntu 20.04](https://www.howtoforge.com/tutorial/ubuntu-jfrog/) 
+2. Now, open your web browser and type the URL https://. You will be redirected to the Jfrog Atrifactory page. Create username and password and create your new repository.  
+3. Next, fork the Todo repository below into your GitHub account
 `https://github.com/darey-devops/php-todo.git`
 3. On you Jenkins server, install PHP, its dependencies and Composer tool 
     `sudo apt install -y zip libapache2-mod-php phploc php-{xml,bcmath,bz2,intl,gd,mbstring,mysql,zip}`
-4. Install Jenkins plugins
-**Plot plugin** for plot plugin to display tests reports, and code coverage information.
+4. In Jenkins UI install the following Jenkins plugins: 
+**Plot plugin** to display tests reports, and code coverage information.
 **Artifactory plugin** will be used to easily upload code artifacts into an Artifactory server.
 5. In Jenkins UI configure Artifactory
 - Go to Dashboard
@@ -230,7 +231,7 @@ Our goal here is to deploy the Todo application onto servers directly from **Art
 - Configure the server ID, URL and Credentials, run Test Connection.
 
 ### Phase 2 – Integrate Artifactory repository with Jenkins
-1. Create a dummy Jenkinsfile in the repository
+1. In VScode create a new Jenkinsfile in the Todo repository
 2. Using Blue Ocean, create a multibranch Jenkins pipeline
 3. On the database server, create database and user
 ```
@@ -315,4 +316,45 @@ This plugin provides generic plotting (or graphing) capabilities in Jenkins. It 
       }
     }
 ```
-You should now see a Plot menu item on the lef
+You should now see a Plot menu item on the left menu. Click on it to see the charts.
+3. Bundle the application code into an artifact (archived package) and upload to Artifactory
+```
+stage ('Package Artifact') {
+    steps {
+            sh 'zip -qr php-todo.zip ${WORKSPACE}/*'
+     }
+    }
+```
+4. Publish the resulted artifact into Artifactory
+```
+stage ('Upload Artifact to Artifactory') {
+          steps {
+            script { 
+                 def server = Artifactory.server 'artifactory-server'                 
+                 def uploadSpec = """{
+                    "files": [
+                      {
+                       "pattern": "php-todo.zip",
+                       "target": "<name-of-artifact-repository>/php-todo",
+                       "props": "type=zip;status=ready"
+
+                       }
+                    ]
+                 }""" 
+
+                 server.upload spec: uploadSpec
+               }
+            }
+
+        }
+```
+5. Deploy the application to the dev environment by launching Ansible pipeline
+```
+stage ('Deploy to Dev Environment') {
+    steps {
+    build job: 'ansible-project/main', parameters: [[$class: 'StringParameterValue', name: 'env', value: 'dev']], propagate: false, wait: true
+    }
+  }
+```
+6. Next we want to ensure that the code being deployed has the quality that meets corporate and customer requirements. We have implemented Unit Tests and Code Coverage Analysis with **phpunit** and **phploc**, we still need to implement **Quality Gate** to ensure that ONLY code with the required code coverage, and other quality standards make it through to the environments. To achieve this, we need to configure [SonarQube]() – An open-source platform developed by SonarSource for continuous inspection of code quality to perform automatic reviews with static analysis of code to detect bugs, code smells, and security vulnerabilities.
+7. 
