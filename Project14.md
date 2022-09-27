@@ -1,14 +1,17 @@
 ## END-TO-END IMPLEMENTATION OF CI/CD PIPELINE FOR A PHP BASED APPLICATION
 
+![1](https://user-images.githubusercontent.com/74002629/192497609-7c4c4583-ecfd-4f68-9b0a-b3bb3df7d91a.PNG)
+
+
 ##### Prerequsites
-1. Servers: You will require 6 servers for the project which incudes:
+1. Servers: You will require 6 servers for the project which includes:
 - nginx server: This would act as the reverse proxy server to our site and tool. 
 - Jenkins server: To be used to implement your CI/CD workflows or pipelines. Select a t2.medium at least, Ubuntu 20.04 and Security group should be open to port 8080
 - SonarQube server: To be used for Code quality analysis. Select a t2.medium at least, Ubuntu 20.04 and Security group should be open to port 9000
 - -Artifactory server: To be used as the binary repository where the outcome of your build process is stored. Select a t2.medium at least and Security group should be open to port 8081
 - Database server: To server as the databse server for the Todo application
 - Todo webserver: To host the Todo web application.
-2. Secuirty groups: For the purposes of this project, you can have create one security group that is open to all traffic. This should however not be attempted in a real DevOps enviroment.
+2. Secuirty groups: For the purposes of this project, you can have one security group that is open to all traffic. This should however not be attempted in a real DevOps enviroment.
 3. Your Ansible inventory should look like this  
 ```
 ├── ci
@@ -19,17 +22,21 @@
 ├── sit
 └── uat
 ```
-focus will be mainly on the CI, Dev and Pentest Enviroments 
+focus will be mainly on the CI, Dev and Pentest enviroments 
 
-3. Ansible roles for the CI environment. In addition to the previous Ansible roles from project 13, in your ansibile-config-mgt repo add 2 more roles: [Sonarqube](https://www.sonarqube.org/) and [Artifactory](https://jfrog.com/artifactory/).
+4. Ansible roles for the CI environment. In addition to the previous Ansible roles from project 13, in your ansibile-config-mgt repo add 2 more roles: [Sonarqube](https://www.sonarqube.org/) and [Artifactory](https://jfrog.com/artifactory/).
 
-### Phase 1
+#### Phase 1
 ##### Prepare your Jenkins server
-1. Set up SSH-agent:
-2. Connect to the instance on VScode.
+1. Set up SSH-agent: 
+```
+eval `ssh-agent -s`
+ssh-add <path-to-private-key>
+```
+2. Connect to your Jenkins instance on VScode.
 3. Install the following packages and dependencies on the server:
-- Install git :
-- Clone dwn the Asible-config-mgt repository: `git clone 
+- Install git : `sudo apt install git`
+- Clone dwn the Asible-config-mgt repository: `git clone https://github.com/cynthia-okoduwa/ansible-config-mgt.git`
 - Install Jenkins and its dependencies. Steps to install Jenkins can be found [here](https://www.jenkins.io/doc/book/installing/)
 4. Configure Ansible For Jenkins Deployment. See [Project 9](https://github.com/cynthia-okoduwa/DevOps-projects/blob/main/Project9.md) for the initial setup of Jenkins. Here I will be comfiguring Jenkins to run Ansible commands in Jenkins UI.
 - Navigate to Jenkins URL: `<Jenkins-server-public-IP>:8080`
@@ -112,7 +119,7 @@ Currently we only have the Build stage. Let us add another stage called Test. Pa
 13. Refresh the page and both branches will start building automatically. You can go into Blue Ocean and see both branches there too.
 14. In Blue Ocean, you can now see how the Jenkinsfile has caused a new step in the pipeline launch build for the new branch.
 
-### Phase 2
+#### Phase 2
 1. Install Ansible on Jenkins your ubuntu VM. Follow the steps in this link to insall [Ansible](https://www.cyberciti.biz/faq/how-to-install-and-configure-latest-version-of-ansible-on-ubuntu-linux/)
 2. Install Ansible plugin in Jenkins UI
 3. Create Jenkinsfile from scratch. (Delete all you currently have in there and start all over to get Ansible to run successfully) Note: Ensure that Ansible runs against the **Dev** environment successfully. 
@@ -213,21 +220,21 @@ pipeline {
 ```
 6. In the Ansible execution section of the Jenkinsfile, remove the hardcoded inventory/dev and replace with `${inventory}`
 
-## DEPLOYING A CI/CD PIPELINE FOR TODO APPLICATION
+### DEPLOYING A CI/CD PIPELINE FOR TODO APPLICATION
 
 Our goal here is to deploy the Todo application onto servers directly from **Artifactory** rather than from **git**. 
 1. Updated Ansible with an Artifactory role, use this guide to create an Ansible role for Artifactory (ignore the Nginx part). [Configure Artifactory on Ubuntu 20.04](https://www.howtoforge.com/tutorial/ubuntu-jfrog/) 
 2. Now, open your web browser and type the URL https://. You will be redirected to the Jfrog Atrifactory page. Enter default username and password: admin/password. Once in create username and password and create your new repository. (Take note of the reopsitory name)
 ![pix23](https://user-images.githubusercontent.com/74002629/192488480-5562cbb1-d39e-4dfe-83e1-ced7b7113786.PNG)
 
-4. Next, fork the Todo repository below into your GitHub account
+3. Next, fork the Todo repository below into your GitHub account
 `https://github.com/darey-devops/php-todo.git`
-3. On you Jenkins server, install PHP, its dependencies and Composer tool 
+4. On you Jenkins server, install PHP, its dependencies and Composer tool 
     `sudo apt install -y zip libapache2-mod-php phploc php-{xml,bcmath,bz2,intl,gd,mbstring,mysql,zip}`
-4. In Jenkins UI install the following Jenkins plugins: 
+5. In Jenkins UI install the following Jenkins plugins: 
 **Plot plugin** to display tests reports, and code coverage information.
 **Artifactory plugin** will be used to easily upload code artifacts into an Artifactory server.
-5. In Jenkins UI configure Artifactory
+6. In Jenkins UI configure Artifactory
 - Go to Dashboard
 - System configuration
 - Configure the server ID, URL and Credentials, run Test Connection.
@@ -235,18 +242,18 @@ Our goal here is to deploy the Todo application onto servers directly from **Art
 ### Phase 2 – Integrate Artifactory repository with Jenkins
 1. In VScode create a new Jenkinsfile in the Todo repository
 2. Using Blue Ocean, create a multibranch Jenkins pipeline
-4. Istall my sql client: `sudo apt install mysql -y`
-5. Login into the DB-server(mysql server) and set the the bind address to 0.0.0.0: sudo vi /etc/mysql/mysql.conf.d/mysqld.cnf
+3. Istall my sql client: `sudo apt install mysql -y`
+4. Login into the DB-server(mysql server) and set the the bind address to 0.0.0.0: sudo vi /etc/mysql/mysql.conf.d/mysqld.cnf
 ![pix27](https://user-images.githubusercontent.com/74002629/192424564-bf94bce3-dd50-4753-88fb-35f297e8f15f.PNG)
 
-6. Restart the my sql- server: `sudo systemctl restart mysql`
-7.  On the database server, create database and user
+5. Restart the my sql- server: `sudo systemctl restart mysql`
+6.  On the database server, create database and user
 ```
 Create database homestead;
 CREATE USER 'homestead'@'%' IDENTIFIED BY 'sePret^i';
 GRANT ALL PRIVILEGES ON * . * TO 'homestead'@'%';
 ```
-8. Update the database connectivity requirements in the file .env.sample (DB_Host is the Private IP of the DB-server)
+7. Update the database connectivity requirements in the file .env.sample (DB_Host is the Private IP of the DB-server)
 ```
 DB_HOST=172.31.87.194
 DB_DATABASE=homestead
@@ -255,10 +262,10 @@ DB_PASSWORD=sePret^i
 DB_CONNECTION=mysql 
 DB_PORT=3306
 ```
-9. Log into mysql from VScode: mysql -h 172.31.87.194 -u homestead -p (at the promot enter pasword)
+8. Log into mysql from VScode: mysql -h 172.31.87.194 -u homestead -p (at the promot enter pasword)
 ![pix26](https://user-images.githubusercontent.com/74002629/192424380-386ee0af-aae6-4b6c-a8f5-31b8a35b63a7.PNG)
 
-10. Update Jenkinsfile with proper pipeline configuration. In the Checkout SCM stage ensure you specify the branch as main and change the git repository to yours.
+9. Update Jenkinsfile with proper pipeline configuration. In the Checkout SCM stage ensure you specify the branch as main and change the git repository to yours.
 ```
 pipeline {
     agent any
@@ -294,10 +301,10 @@ pipeline {
 Notice the Prepare Dependencies section
 - The required file by PHP is **.env** so we are renaming **.env.sample** to **.env**
 - Composer is used by PHP to install all the dependent libraries used by the application. php artisan uses the .env file to setup the required database objects – (After the successful run of this step, login to the database, run show tables and you will see the tables being created for you)
-11. Commit to main repo and run the build on Jenkins
+10. Commit to main repo and run the build on Jenkins
 ![pix31](https://user-images.githubusercontent.com/74002629/192425128-fdddb299-9eac-4b44-b58e-87751f97c552.PNG)
 
-12. Update the Jenkinsfile to include Unit tests step
+11. Update the Jenkinsfile to include Unit tests step
 ```
     stage('Execute Unit Tests') {
       steps {
@@ -407,7 +414,7 @@ stage ('Deploy to Dev Environment') {
 13. Login with Username and Password as admin/admin
 ![pix42](https://user-images.githubusercontent.com/74002629/192487591-59a01fb3-1ee8-45ac-9b04-a636ec821c03.PNG)
 
-15. Confiure Sonar in Jenkins
+14. Confiure Sonar in Jenkins
 - install **SonarQube Scanner plugin**
 - Navigate to configure system in Jenkins. Add SonarQube server: `Manage Jenkins > Configure System`
 - To generate authentication token in SonarQube to to: `User > My Account > Security > Generate Tokens`
@@ -415,7 +422,7 @@ stage ('Deploy to Dev Environment') {
 
 - Configure Quality Gate Jenkins Webhook in SonarQube – The URL should point to your Jenkins server http://{JENKINS_HOST}/sonarqube-webhook/ Go to:`Administration > Configuration > Webhooks > Create`
 - Setup SonarQube scanner from Jenkins – Global Tool Configuration. Go to: `Manage Jenkins > Global Tool Configuration`
-10. Update Jenkins Pipeline to include SonarQube scanning and Quality Gate. Making sure to place it before the "package artifact stage" Below is the snippet for a Quality Gate stage in Jenkinsfile.
+15. Update Jenkins Pipeline to include SonarQube scanning and Quality Gate. Making sure to place it before the "package artifact stage" Below is the snippet for a Quality Gate stage in Jenkinsfile.
 ```
     stage('SonarQube Quality Gate') {
         environment {
@@ -430,10 +437,10 @@ stage ('Deploy to Dev Environment') {
     }
 ```
 NOTE: The above step will fail because we have not updated **sonar-scanner.properties**
-11. Configure sonar-scanner.properties – From the step above, Jenkins will install the scanner tool on the Linux server. You will need to go into the tools directory on the server to configure the properties file in which SonarQube will require to function during pipeline execution.
+16. Configure sonar-scanner.properties – From the step above, Jenkins will install the scanner tool on the Linux server. You will need to go into the tools directory on the server to configure the properties file in which SonarQube will require to function during pipeline execution.
 `cd /var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/SonarQubeScanner/conf/`
-12. Open sonar-scanner.properties file: `sudo vi sonar-scanner.properties`
-13. Add configuration related to php-todo project
+17. Open sonar-scanner.properties file: `sudo vi sonar-scanner.properties`
+18. Add configuration related to php-todo project
 ```
 sonar.host.url=http://<SonarQube-Server-IP-address>:9000
 sonar.projectKey=php-todo
@@ -477,17 +484,3 @@ The complete stage will now look like this:
 To test, create different branches and push to GitHub. You will realise that only branches other than develop, hotfix, release, main, or master will be able to deploy the code.
 
 If everything goes well, you should be able to see something like this:
-
-
-
-
-
-
-
-
-
-
-
-
-Issues
-For some reason, Sonarqube wa sunable to install from Jenkins, so I installed it manually from my VScode terminal
