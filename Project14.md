@@ -6,10 +6,10 @@
 - Jenkins server: To be used to implement your CI/CD workflows or pipelines. Select a t2.medium at least, Ubuntu 20.04 and Security group should be open to port 8080
 - SonarQube server: To be used for Code quality analysis. Select a t2.medium at least, Ubuntu 20.04 and Security group should be open to port 9000
 - -Artifactory server: To be used as the binary repository where the outcome of your build process is stored. Select a t2.medium at least and Security group should be open to port 8081
-- Database server:
-- Todo webserver:
-(For the purposes of this project, you can have create one security group that is open to all traffic bearing in mind that this is not )
-2. Your Ansible inventory should look like this  
+- Database server: To server as the databse server for the Todo application
+- Todo webserver: To host the Todo web application.
+2. Secuirty groups: For the purposes of this project, you can have create one security group that is open to all traffic. This should however not be attempted in a real DevOps enviroment.
+3. Your Ansible inventory should look like this  
 ```
 ├── ci
 ├── dev
