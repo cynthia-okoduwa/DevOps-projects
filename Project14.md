@@ -217,8 +217,10 @@ pipeline {
 
 Our goal here is to deploy the Todo application onto servers directly from **Artifactory** rather than from **git**. 
 1. Updated Ansible with an Artifactory role, use this guide to create an Ansible role for Artifactory (ignore the Nginx part). [Configure Artifactory on Ubuntu 20.04](https://www.howtoforge.com/tutorial/ubuntu-jfrog/) 
-2. Now, open your web browser and type the URL https://. You will be redirected to the Jfrog Atrifactory page. Create username and password and create your new repository. (Take note of the reopsitory name)
-3. Next, fork the Todo repository below into your GitHub account
+2. Now, open your web browser and type the URL https://. You will be redirected to the Jfrog Atrifactory page. Enter default username and password: admin/password. Once in create username and password and create your new repository. (Take note of the reopsitory name)
+![pix23](https://user-images.githubusercontent.com/74002629/192488480-5562cbb1-d39e-4dfe-83e1-ced7b7113786.PNG)
+
+4. Next, fork the Todo repository below into your GitHub account
 `https://github.com/darey-devops/php-todo.git`
 3. On you Jenkins server, install PHP, its dependencies and Composer tool 
     `sudo apt install -y zip libapache2-mod-php phploc php-{xml,bcmath,bz2,intl,gd,mbstring,mysql,zip}`
@@ -395,7 +397,97 @@ stage ('Deploy to Dev Environment') {
 ![pix39](https://user-images.githubusercontent.com/74002629/192427578-055a05ed-233d-4183-b037-38c356870a58.PNG)
 
 8. Next we want to ensure that the code being deployed has the quality that meets corporate and customer requirements. We have implemented Unit Tests and Code Coverage Analysis with **phpunit** and **phploc**, we still need to implement [Quality Gate](https://docs.sonarqube.org/latest/user-guide/quality-gates/) to ensure that ONLY code with the required code coverage, and other quality standards make it through to the environments. To achieve this, we need to configure [SonarQube](https://docs.sonarqube.org/latest/) – An open-source platform developed by SonarSource for continuous inspection of code quality to perform automatic reviews with static analysis of code to detect bugs, code smells, and security vulnerabilities.
-9. Create Sonarqube roles. You can do this manaually or write a script with the directions below or go to Ansible Galaxy and find a sonarqube role
+9. Install SonarQube on Ubuntu 20.04 With PostgreSQL as Backend Database, Create Sonarqube roles. You can do this manaually or write a script with the directions below or go to [Ansible Galaxy](https://galaxy.ansible.com/search?deprecated=false&keywords=&order_by=-relevance) to find a sonarqube role
 ![4](https://user-images.githubusercontent.com/74002629/192433173-4130fcd1-d6df-45cb-a6e0-6e7fdf3b6985.PNG)
 ![5](https://user-images.githubusercontent.com/74002629/192433188-64afa5fe-e1c5-4942-bffb-f1619de83756.PNG)
 ![6](https://user-images.githubusercontent.com/74002629/192433214-c7665fe5-8dfc-4bec-adb8-636aa4f30425.PNG)
+10. Ensure your Sonarqube server is listed on your inventory/ci file.
+11. Update your site.yml with sonarqube play instruction.
+12. Next copy your paste your public IP for your sonarqube server in your browser to access the SonarQube UI: <sonar-public-IP:9000/sonar>
+13. Login with Username and Password as admin/admin
+![pix42](https://user-images.githubusercontent.com/74002629/192487591-59a01fb3-1ee8-45ac-9b04-a636ec821c03.PNG)
+
+15. Confiure Sonar in Jenkins
+- install **SonarQube Scanner plugin**
+- Navigate to configure system in Jenkins. Add SonarQube server: `Manage Jenkins > Configure System`
+- To generate authentication token in SonarQube to to: `User > My Account > Security > Generate Tokens`
+![pix43](https://user-images.githubusercontent.com/74002629/192487160-804a2fe7-92c3-4f5c-aa95-71d7f6dee1e9.PNG)
+
+- Configure Quality Gate Jenkins Webhook in SonarQube – The URL should point to your Jenkins server http://{JENKINS_HOST}/sonarqube-webhook/ Go to:`Administration > Configuration > Webhooks > Create`
+- Setup SonarQube scanner from Jenkins – Global Tool Configuration. Go to: `Manage Jenkins > Global Tool Configuration`
+10. Update Jenkins Pipeline to include SonarQube scanning and Quality Gate. Making sure to place it before the "package artifact stage" Below is the snippet for a Quality Gate stage in Jenkinsfile.
+```
+    stage('SonarQube Quality Gate') {
+        environment {
+            scannerHome = tool 'SonarQubeScanner'
+        }
+        steps {
+            withSonarQubeEnv('sonarqube') {
+                sh "${scannerHome}/bin/sonar-scanner"
+            }
+
+        }
+    }
+```
+NOTE: The above step will fail because we have not updated **sonar-scanner.properties**
+11. Configure sonar-scanner.properties – From the step above, Jenkins will install the scanner tool on the Linux server. You will need to go into the tools directory on the server to configure the properties file in which SonarQube will require to function during pipeline execution.
+`cd /var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/SonarQubeScanner/conf/`
+12. Open sonar-scanner.properties file: `sudo vi sonar-scanner.properties`
+13. Add configuration related to php-todo project
+```
+sonar.host.url=http://<SonarQube-Server-IP-address>:9000
+sonar.projectKey=php-todo
+#----- Default source code encoding
+sonar.sourceEncoding=UTF-8
+sonar.php.exclusions=**/vendor/**
+sonar.php.coverage.reportPaths=build/logs/clover.xml
+sonar.php.tests.reportPath=build/logs/junit.xml 
+```
+### End-to-End Pipeline Overview
+Congratulations on the job so far. If everything has worked out for you so far, you should have a view like below:
+![pix44](https://user-images.githubusercontent.com/74002629/192485051-3c1a1ba2-c204-4c01-b44f-af3a1badf1bd.PNG)
+
+But we are not completely done yet. The quality gate we just included has no effect. Why? Well, because if you go to the SonarQube UI, you will realise that we just pushed a poor-quality code onto the development environment. Navigate to php-todo project in SonarQube, there are bugs, and there is 0.0% code coverage. (code coverage is a percentage of unit tests added by developers to test functions and objects in the code)
+
+![pix45](https://user-images.githubusercontent.com/74002629/192485802-22d43337-ab3e-41bc-a1fa-71d3fbbdcc95.PNG)
+
+If you click on php-todo project for further analysis, you will see that there is 6 hours’ worth of technical debt, code smells and security issues in the code.
+First, we will include a When condition to run Quality Gate whenever the running branch is either develop, hotfix, release, main, or master
+when { branch pattern: "^develop*|^hotfix*|^release*|^main*", comparator: "REGEXP"}
+Then we add a timeout step to wait for SonarQube to complete analysis and successfully finish the pipeline only when code quality is acceptable.
+    timeout(time: 1, unit: 'MINUTES') {
+        waitForQualityGate abortPipeline: true
+    }
+The complete stage will now look like this:
+
+    stage('SonarQube Quality Gate') {
+      when { branch pattern: "^develop*|^hotfix*|^release*|^main*", comparator: "REGEXP"}
+        environment {
+            scannerHome = tool 'SonarQubeScanner'
+        }
+        steps {
+            withSonarQubeEnv('sonarqube') {
+                sh "${scannerHome}/bin/sonar-scanner -Dproject.settings=sonar-project.properties"
+            }
+            timeout(time: 1, unit: 'MINUTES') {
+                waitForQualityGate abortPipeline: true
+            }
+        }
+    }
+To test, create different branches and push to GitHub. You will realise that only branches other than develop, hotfix, release, main, or master will be able to deploy the code.
+
+If everything goes well, you should be able to see something like this:
+
+
+
+
+
+
+
+
+
+
+
+
+Issues
+For some reason, Sonarqube wa sunable to install from Jenkins, so I installed it manually from my VScode terminal
