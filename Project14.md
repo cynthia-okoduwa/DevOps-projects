@@ -217,7 +217,7 @@ pipeline {
 
 Our goal here is to deploy the Todo application onto servers directly from **Artifactory** rather than from **git**. 
 1. Updated Ansible with an Artifactory role, use this guide to create an Ansible role for Artifactory (ignore the Nginx part). [Configure Artifactory on Ubuntu 20.04](https://www.howtoforge.com/tutorial/ubuntu-jfrog/) 
-2. Now, open your web browser and type the URL https://. You will be redirected to the Jfrog Atrifactory page. Create username and password and create your new repository.  
+2. Now, open your web browser and type the URL https://. You will be redirected to the Jfrog Atrifactory page. Create username and password and create your new repository. (Take note of the reopsitory name)
 3. Next, fork the Todo repository below into your GitHub account
 `https://github.com/darey-devops/php-todo.git`
 3. On you Jenkins server, install PHP, its dependencies and Composer tool 
@@ -233,14 +233,30 @@ Our goal here is to deploy the Todo application onto servers directly from **Art
 ### Phase 2 – Integrate Artifactory repository with Jenkins
 1. In VScode create a new Jenkinsfile in the Todo repository
 2. Using Blue Ocean, create a multibranch Jenkins pipeline
-3. On the database server, create database and user
+4. Istall my sql client: `sudo apt install mysql -y`
+5. Login into the DB-server(mysql server) and set the the bind address to 0.0.0.0: sudo vi /etc/mysql/mysql.conf.d/mysqld.cnf
+![pix27](https://user-images.githubusercontent.com/74002629/192424564-bf94bce3-dd50-4753-88fb-35f297e8f15f.PNG)
+
+6. Restart the my sql- server: `sudo systemctl restart mysql`
+7.  On the database server, create database and user
 ```
 Create database homestead;
 CREATE USER 'homestead'@'%' IDENTIFIED BY 'sePret^i';
 GRANT ALL PRIVILEGES ON * . * TO 'homestead'@'%';
 ```
-4. Update the database connectivity requirements in the file .env.sample
-5. Update Jenkinsfile with proper pipeline configuration
+8. Update the database connectivity requirements in the file .env.sample (DB_Host is the Private IP of the DB-server)
+```
+DB_HOST=172.31.87.194
+DB_DATABASE=homestead
+DB_USERNAME=homestead
+DB_PASSWORD=sePret^i
+DB_CONNECTION=mysql 
+DB_PORT=3306
+```
+9. Log into mysql from VScode: mysql -h 172.31.87.194 -u homestead -p (at the promot enter pasword)
+![pix26](https://user-images.githubusercontent.com/74002629/192424380-386ee0af-aae6-4b6c-a8f5-31b8a35b63a7.PNG)
+
+10. Update Jenkinsfile with proper pipeline configuration. In the Checkout SCM stage ensure you specify the branch as main and change the git repository to yours.
 ```
 pipeline {
     agent any
@@ -257,7 +273,7 @@ pipeline {
 
     stage('Checkout SCM') {
       steps {
-            git branch: 'main', url: 'https://github.com/darey-devops/php-todo.git'
+            git branch: 'main', url: 'https://github.com/cynthia-okoduwa/php-todo.git'
       }
     }
 
@@ -275,8 +291,11 @@ pipeline {
 ```
 Notice the Prepare Dependencies section
 - The required file by PHP is **.env** so we are renaming **.env.sample** to **.env**
-- Composer is used by PHP to install all the dependent libraries used by the application. php artisan uses the .env file to setup the required database objects – (After successful run of this step, login to the database, run show tables and you will see the tables being created for you)
-6. Update the Jenkinsfile to include Unit tests step
+- Composer is used by PHP to install all the dependent libraries used by the application. php artisan uses the .env file to setup the required database objects – (After the successful run of this step, login to the database, run show tables and you will see the tables being created for you)
+11. Commit to main repo and run the build on Jenkins
+![pix31](https://user-images.githubusercontent.com/74002629/192425128-fdddb299-9eac-4b44-b58e-87751f97c552.PNG)
+
+12. Update the Jenkinsfile to include Unit tests step
 ```
     stage('Execute Unit Tests') {
       steps {
@@ -286,7 +305,13 @@ Notice the Prepare Dependencies section
 ### Phase 3 – Code Quality Analysis
 For PHP the most commonly tool used for code quality analysis is **phploc**. [Read the article here for more](https://matthiasnoback.nl/2019/09/using-phploc-for-quick-code-quality-estimation-part-1/)
 The data produced by phploc can be ploted onto graphs in Jenkins.
-1. Add the code analysis step in Jenkinsfile. The output of the data will be saved in **build/logs/phploc.csv** file.
+1. Install phploc: 
+```
+sudo dnf --enablerepo=remi install php-phpunit-phploc
+wget -O phpunit https://phar.phpunit.de/phpunit-7.phar
+chmod +x phpunit
+```
+2. Add the code analysis step in Jenkinsfile. The output of the data will be saved in **build/logs/phploc.csv** file.
 ```
 stage('Code Analysis') {
   steps {
@@ -295,7 +320,7 @@ stage('Code Analysis') {
   }
 }
 ```
-2. Plot the data using plot Jenkins plugin.
+3. Plot the data using Plot Jenkins plugin.
 This plugin provides generic plotting (or graphing) capabilities in Jenkins. It will plot one or more single values variations across builds in one or more plots. Plots for a particular job (or project) are configured in the job configuration screen, where each field has additional help information. Each plot can have one or more lines (called data series). After each build completes the plots’ data series latest values are pulled from the CSV file generated by phploc.
 ```
     stage('Plot Code Coverage Report') {
@@ -317,7 +342,11 @@ This plugin provides generic plotting (or graphing) capabilities in Jenkins. It 
     }
 ```
 You should now see a Plot menu item on the left menu. Click on it to see the charts.
+![pix33](https://user-images.githubusercontent.com/74002629/192425751-e7fc5dc2-8362-438f-8607-0065c0cc0729.PNG)
+![pix34](https://user-images.githubusercontent.com/74002629/192425753-5ffc7023-79b1-40db-a488-d838d59665b6.PNG)
+
 3. Bundle the application code into an artifact (archived package) and upload to Artifactory
+- Install Zip: Sudo apt install zip -y
 ```
 stage ('Package Artifact') {
     steps {
@@ -325,7 +354,7 @@ stage ('Package Artifact') {
      }
     }
 ```
-4. Publish the resulted artifact into Artifactory
+4. Publish the resulted artifact into Artifactory making sure ti specify the target as the name of the artifactory repository you created earlier
 ```
 stage ('Upload Artifact to Artifactory') {
           steps {
@@ -335,7 +364,7 @@ stage ('Upload Artifact to Artifactory') {
                     "files": [
                       {
                        "pattern": "php-todo.zip",
-                       "target": "<name-of-artifact-repository>/php-todo",
+                       "target": "PBL/php-todo",
                        "props": "type=zip;status=ready"
 
                        }
@@ -348,7 +377,13 @@ stage ('Upload Artifact to Artifactory') {
 
         }
 ```
-5. Deploy the application to the dev environment by launching Ansible pipeline
+5. Push and run your build in Jenkins
+![pix36](https://user-images.githubusercontent.com/74002629/192427223-4c55129d-c84f-425d-babd-81b6ce4b4991.PNG)
+
+6.  Log in to your repository in Jfrog artifactory to see the packaged artifact.
+![pix37](https://user-images.githubusercontent.com/74002629/192427240-d2764381-44dd-46a2-98a9-4af3e29a3147.PNG)
+
+7. Deploy the application to the dev environment by launching Ansible pipeline. Ensure you update your inventory/dev with the Private IP of your TODO-server and your site.yml file is updated with todo play.
 ```
 stage ('Deploy to Dev Environment') {
     steps {
@@ -356,5 +391,11 @@ stage ('Deploy to Dev Environment') {
     }
   }
 ```
-6. Next we want to ensure that the code being deployed has the quality that meets corporate and customer requirements. We have implemented Unit Tests and Code Coverage Analysis with **phpunit** and **phploc**, we still need to implement **Quality Gate** to ensure that ONLY code with the required code coverage, and other quality standards make it through to the environments. To achieve this, we need to configure [SonarQube]() – An open-source platform developed by SonarSource for continuous inspection of code quality to perform automatic reviews with static analysis of code to detect bugs, code smells, and security vulnerabilities.
-7. 
+- This particular stage, once it completes the upload to arifactory, it would trigger a call to the your ansible-config-mgt/static-assignments/deployment.yml file and execute the instructions there. Ensure you update the "Download the artifact" instruction with your artifactory url_username and url_password for your artifactory repo. 
+![pix39](https://user-images.githubusercontent.com/74002629/192427578-055a05ed-233d-4183-b037-38c356870a58.PNG)
+
+8. Next we want to ensure that the code being deployed has the quality that meets corporate and customer requirements. We have implemented Unit Tests and Code Coverage Analysis with **phpunit** and **phploc**, we still need to implement [Quality Gate](https://docs.sonarqube.org/latest/user-guide/quality-gates/) to ensure that ONLY code with the required code coverage, and other quality standards make it through to the environments. To achieve this, we need to configure [SonarQube](https://docs.sonarqube.org/latest/) – An open-source platform developed by SonarSource for continuous inspection of code quality to perform automatic reviews with static analysis of code to detect bugs, code smells, and security vulnerabilities.
+9. Create Sonarqube roles. You can do this manaually or write a script with the directions below or go to Ansible Galaxy and find a sonarqube role
+![4](https://user-images.githubusercontent.com/74002629/192433173-4130fcd1-d6df-45cb-a6e0-6e7fdf3b6985.PNG)
+![5](https://user-images.githubusercontent.com/74002629/192433188-64afa5fe-e1c5-4942-bffb-f1619de83756.PNG)
+![6](https://user-images.githubusercontent.com/74002629/192433214-c7665fe5-8dfc-4bec-adb8-636aa4f30425.PNG)
