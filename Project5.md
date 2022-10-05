@@ -29,7 +29,7 @@ Note: Basically, it means one should copy the  private ip address of the mysql-c
 
 ![Screenshot from 2022-10-04 16-41-21](https://user-images.githubusercontent.com/46121207/193996765-1153fd88-8ed2-4025-b27d-a31ba375de70.png)
 
-Extra Tips: If you decide to use 0.0.0.0/0 in mysql/Aurora, it means in step 16, you will copy the public Ip address of your mysql-server as the ip address when you ssh in your mysql-client server.  You will understand better when you finish the lab.
+Extra Tips: If you decide to use 0.0.0.0/0 in mysql/Aurora, it means in step 12, you will copy the public Ip address of your mysql-server as the ip address when you ssh in your mysql-client server.  You will understand better when you finish the lab.
 
 
 ![Screenshot from 2022-10-05 07-34-45](https://user-images.githubusercontent.com/46121207/193996777-7da3b66e-43e3-4ccf-b427-ffc58c1e1ef8.png)
