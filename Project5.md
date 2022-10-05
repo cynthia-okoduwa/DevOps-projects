@@ -87,10 +87,12 @@ sudo apt install mysql-client -y
 
 12. From mysql client connect remotely to mysql server Database Engine without using SSH. Using the mysql utility to perform this action type:
 
-sudo mysql -u remote_user -h <mysql-server private ip> -p and enter `password` for the user password
+sudo mysql -u remote_user -h **mysql-server private ip** -p and enter `password` for the user password
 
 Note: use the password in the step 8, which is ‘password’
-  ![Screenshot from 2022-10-05 07-34-45](https://user-images.githubusercontent.com/46121207/193997787-3d87920d-e1ad-4f76-b0a7-3329d0983b0e.png)
+
+  
+![Screenshot from 2022-10-05 07-31-10](https://user-images.githubusercontent.com/46121207/194000799-4593ed7a-9aca-470f-810d-96e853242dfa.png)
 
   
 
