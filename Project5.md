@@ -38,6 +38,8 @@ Extra Tips: If you decide to use 0.0.0.0/0 in mysql/Aurora, it means in step 16,
 
 5. Run mysql command:  sudo mysql -u root -p This would take you to the mysql prompt( you may be prompted to input password)
 Then run: ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'mynewpassword'; to alter the root user  
+![Screenshot from 2022-10-05 07-52-48](https://user-images.githubusercontent.com/46121207/193998688-eb6a9af9-2a5f-402e-8e62-28305bddf8a7.png)
+
 
 ![Screenshot from 2022-10-05 06-35-45](https://user-images.githubusercontent.com/46121207/193997344-e20212cf-07d7-4f0d-832e-3adb22e5b713.png)
 
