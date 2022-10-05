@@ -64,12 +64,11 @@ To grant privileges:  GRANT ALL ON test_db.* TO 'remote_user'@'%' WITH GRANT OPT
 Flush privileges and exit mysql:  FLUSH PRIVILEGES; 
 ![Screenshot from 2022-10-05 05-30-04](https://user-images.githubusercontent.com/46121207/193997574-c5aa8e56-2a33-4ee3-a55f-80a957206833.png)
 
- Having created the user and database, configure MySQL server to allow connections from remote hosts. Use the following command: sudo vi /etc/mysql/mysql.conf.d/mysqld.cnf 
+ 9. Having created the user and database, configure MySQL server to allow connections from remote hosts. Use the following command: sudo vi /etc/mysql/mysql.conf.d/mysqld.cnf 
  
-![Screenshot from 2022-10-05 05-33-38](https://user-images.githubusercontent.com/46121207/193997673-ef767ec0-f0c2-4f80-9f29-a47e84b80b47.png)
 
 
-9. In the text editor, replace the old **Bind-address** from ‘127.0.0.1’ to ‘0.0.0.0’ then save and exit.
+ In the text editor, replace the old **Bind-address** from ‘127.0.0.1’ to ‘0.0.0.0’ then save and exit.
 
 
 ![Screenshot from 2022-10-05 05-33-38](https://user-images.githubusercontent.com/46121207/193997946-02fc658b-c17e-4a64-a102-3a0c1b5c0411.png)
