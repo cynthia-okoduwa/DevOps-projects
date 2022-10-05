@@ -89,7 +89,7 @@ sudo apt install mysql-client -y
 
 sudo mysql -u remote_user -h **mysql-server private ip** -p and enter `password` for the user password
 
-Note: use the password in the step 8, which is ‘password’
+Note: use the password in the step 9, which is ‘password’
 
   
 ![Screenshot from 2022-10-05 07-31-10](https://user-images.githubusercontent.com/46121207/194000799-4593ed7a-9aca-470f-810d-96e853242dfa.png)
