@@ -1,12 +1,16 @@
 ## AUTOMATE INFRASTRUCTURE WITH IAC USING TERRAFORM PART 1
-### VPC | SUBNETS | SECURITY GROUPS
-Set up Terraform CLI as per this instruction.
-1. In Visual Studio Code: Create a folder called **PBL** Create a file in the folder, name it **main.tf**
+![Capture](https://user-images.githubusercontent.com/74002629/197526138-6fc583b5-e963-45b3-8113-2c4163b98b16.PNG)
+
+### CREATE VPC AND SUBNETS USING TERRAFORM
+First set up Terraform CLI, to set up Terraform CLI follow this [instruction](https://learn.hashicorp.com/tutorials/terraform/install-cli).
+
+### Create VPC
+1. In Visual Studio Code: Create a folder called **PBL**, then create a file in the folder, name it **main.tf**
 2. Create a resource by declaring AWS as a provider, and a resource to create a VPC in the **main.tf** file. (Provider blocks inform Terraform 
 that you intend to build infrastructure within AWS and resource block will create the resource you specified, in the case the VPC.)
 ```
 provider "aws" {
-  region = "eu-central-1"
+  region = "us-east-1"
 }
 
 # Create VPC
@@ -20,14 +24,16 @@ resource "aws_vpc" "main" {
 ```
 3. Next, download the necessary plugins for Terraform to work. These plugins are used by **Providers** and **Provisioners**.To accomplish this
 run `terraform init` command.
-4. A new directory is created: **.terraform\....** This is where Terraform keeps plugins. Generally, it is safe to delete this folder. 
-It just means that you must execute terraform init again, to download them.
+![pix3](https://user-images.githubusercontent.com/74002629/197527219-1da4de2b-6e20-48ab-b2be-85d2f43416ca.PNG)
+4. A new directory is created: **.terraform\....** This is where Terraform keeps plugins.
+![pix4](https://user-images.githubusercontent.com/74002629/197527479-03a5a619-01c9-43fd-ac9e-4f0d84cf33f9.PNG)
 5. Next, create the resource we just defined: **aws_vpc**. But before that, check to see what terraform intends to create before we tell it to 
 go ahead and create it. Run: `terraform plan`
-6.If you are happy with changes planned, execute `terraform apply`
+6. If you are happy with changes planned, execute `terraform apply`
 ##### Note
-A **terraform.tfstate** is created. Terraform uses this file to stay up to date with the exact state of the infrastructure. It reads this file to know what already exists, what should be added, or destroyed based on the entire terraform code that is being developed.
-Another file **terraform.tfstate.lock.info** is also created in this process, but gets deleted immediately. Terraform uses it to track, who is running its code against the infrastructure at any point in time. This is very important for teams working on the same Terraform repository at the same time. The lock prevents a user from executing Terraform configuration against the same infrastructure when another user is doing the same – it allows to avoid duplicates and conflicts.
+- A **terraform.tfstate** file is created. Terraform uses this file to stay up to date with the exact state of the infrastructure. It reads this file to know what already exists, what should be added, or destroyed based on the entire terraform code that is being developed.
+![pix7](https://user-images.githubusercontent.com/74002629/197527875-c7e0a3f3-e0e2-41ef-bc6b-9ab558496134.PNG)
+- Another file **terraform.tfstate.lock.info** is also created in this process, but gets deleted immediately. Terraform uses it to track, who is running its code against the infrastructure at any point in time. This is very important for teams working on the same Terraform repository at the same time. The lock prevents a user from executing Terraform configuration against the same infrastructure when another user is doing the same – it allows to avoid duplicates and conflicts.
 
 ### Create Subnets
 According to our architectural design, we require 6 subnets: 2 public, 2 private for webservers and 2 private for data layer. In this project we will be creating the public subnet only and the other 4 in subsequent projects.
@@ -52,6 +58,8 @@ According to our architectural design, we require 6 subnets: 2 public, 2 private
 ```
 
 2. Run `terraform plan` to preview your configuration and `terraform apply` to create.
+![pix8](https://user-images.githubusercontent.com/74002629/197528033-cce795c9-ef8f-451c-ad85-a3953e725207.PNG)
+
 ##### Note 
 The above configurations has serveral problems that includes:
 - Hard coded values: Both the availability_zone and cidr_block arguments are hard coded. We should always endeavour to make our work dynamic.
@@ -325,4 +333,6 @@ enable_classiclink_dns_support = "false"
 
 preferred_number_of_public_subnets = 2
 ```
+Your file structure shouke look like this
+![pix15](https://user-images.githubusercontent.com/74002629/197528278-bf472aa3-7e9a-4542-a8a3-9daacaf8c00c.PNG)
 4. Run `terraform plan` and ensure everything works.
