@@ -1,6 +1,27 @@
 ## AUTOMATE INFRASTRUCTURE WITH IAC USING TERRAFORM PART 1
 ![Capture](https://user-images.githubusercontent.com/74002629/197526138-6fc583b5-e963-45b3-8113-2c4163b98b16.PNG)
 
+Our infrastructuer is a three-tiered architecture that features the following and more:
+- A VPC
+- 6 subnets (2 public and 4 private) 
+- A route table associated it with public subnets
+- A route table associated it with private subnets
+- Internet Gateway
+- Public route in table, associated with the Internet Gateway. (This is what allows a public subnet to be accisble from the Internet)
+- Elastic IPs
+- Nat Gateway
+- Security Groups
+- EC2 Instances for 2 webservers, etc
+- Launch Templates
+- Target Groups
+- Autoscaling Groups
+- TLS Certificates
+- Application Load Balancers (ALB)
+- EFS
+- RDS
+- DNS with Route53
+
+
 ### CREATE VPC AND SUBNETS USING TERRAFORM
 First set up Terraform CLI, to set up Terraform CLI follow this [instruction](https://learn.hashicorp.com/tutorials/terraform/install-cli).
 
@@ -332,6 +353,6 @@ enable_classiclink_dns_support = "false"
 
 preferred_number_of_public_subnets = 2
 ```
-Your file structure shouke look like this
+4. Your file structure shouke look like this
 ![pix15](https://user-images.githubusercontent.com/74002629/197528278-bf472aa3-7e9a-4542-a8a3-9daacaf8c00c.PNG)
-4. Run `terraform plan` and ensure everything works.
+5. Run `terraform plan` and ensure everything works.
