@@ -83,7 +83,7 @@ According to our architectural design, we require 6 subnets: 2 public, 2 private
 ##### Note 
 The above configurations has serveral problems that includes:
 - Hard coded values: Both the availability_zone and cidr_block arguments are hard coded. We should always endeavour to make our work dynamic.
-- Multiple Resource Blocks: we declared multiple resource blocks for each subnet in the code. This is bad coding practice. Best parctice is to create a single resource block that can dynamically create resources. If we had to create a lot of subnets, our code would quickly become overwelhming. To optimize this, we can make use of a count argument.
+- Multiple Resource Blocks: we declared multiple resource blocks for each subnet in the code. This is bad coding practice. Best parctice is to create a single resource block that can dynamically create resources. If we had to create a lot of subnets, our code would quickly become overwhelming. To optimize this, we can make use of a count argument.
 Let's improve the code by refactoring it.
 3. Run `terraform destroy` to destroy the current infrastructure and type **yes** after reviewing it.
 
