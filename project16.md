@@ -56,9 +56,8 @@ According to our architectural design, we require 6 subnets: 2 public, 2 private
     availability_zone          = "eu-central-1b"
 }
 ```
-
-2. Run `terraform plan` to preview your configuration and `terraform apply` to create.
 ![pix8](https://user-images.githubusercontent.com/74002629/197528033-cce795c9-ef8f-451c-ad85-a3953e725207.PNG)
+2. Run `terraform plan` to preview your configuration and `terraform apply` to create.
 
 ##### Note 
 The above configurations has serveral problems that includes:
