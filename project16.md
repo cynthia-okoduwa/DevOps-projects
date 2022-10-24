@@ -1,7 +1,7 @@
 ## AUTOMATE INFRASTRUCTURE WITH IAC USING TERRAFORM PART 1
 ![Capture](https://user-images.githubusercontent.com/74002629/197526138-6fc583b5-e963-45b3-8113-2c4163b98b16.PNG)
 
-Our infrastructuer is a three-tiered architecture that features the following and more:
+Our infrastructure is a three-tiered architecture that features the following and more:
 - A VPC
 - 6 subnets (2 public and 4 private) 
 - A route table associated it with public subnets
