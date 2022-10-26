@@ -111,14 +111,13 @@ resource "aws_route_table_association" "public-subnets-assoc" {
 }
 ```
 4. Now if you run `terraform plan` and `terraform apply` you will have the following resources in your AWS infrastructure in multi-az set up:
-
-– Our main vpc
-– 2 Public subnets
-– 4 Private subnets
-– 1 Internet Gateway
-– 1 NAT Gateway
-– 1 EIP
-– 2 Route tables
+- Our vpc
+- 2 Public subnets
+- 4 Private subnets
+- 1 Internet Gateway
+- 1 NAT Gateway
+- 1 EIP
+- 2 Route tables
 
 #### AWS Identity and Access Management
 
@@ -195,15 +194,14 @@ resource "aws_iam_policy" "policy" {
     }
 ```
 #### CREATE SECURITY GROUPS
-We are creating security groups and security group rules for the following resources:
+We are creating security groups and security group rules for the resources below. Click the links to learn more about creating [security groups](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) and [security groups rules](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule)
 - External Application loadbalancers
 - Internal Application loadbalancers
 - Webservers
 - Data layer
 - Bastion host
 - Nginx reverse proxy
-All these security groups will be created in a single new file named `security.tf` , then we are going to refrence this security group within each resources that needs it. Click the links to learn more about creating [security groups](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) and [security groups rules](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule)
-1. Create security groups with the following code snippet:
+1. These security groups will be created in a single new file named `security.tf` , then we are going to refrence this security group within each resources that needs it. Create security groups with the following code snippet:
 ```
 # security group for alb, to allow acess from any where for HTTP and HTTPS traffic
 resource "aws_security_group" "ext-alb-sg" {
@@ -432,3 +430,251 @@ resource "aws_security_group_rule" "inbound-mysql-webserver" {
   security_group_id        = aws_security_group.datalayer-sg.id
 }
 ```
+## CREATE CERTIFICATE FROM AMAZON CERIFICATE MANAGER
+You would require a domain name                        Check out the terraform documentation for [AWS certificate manager]()
+1. Create cert.tf file and add the following code snippets to it.
+NOTE: Read Through to change the domain name to your own domain name and every other name that needs to be changed.
+```
+# The entire section create a certiface, public zone, and validate the certificate using DNS method
+
+# Create the certificate using a wildcard for all the domains created in bulwm.click
+resource "aws_acm_certificate" "bulwm" {
+  domain_name       = "*.bulwm.click"
+  validation_method = "DNS"
+}
+
+# calling the hosted zone
+data "aws_route53_zone" "bulwm" {
+  name         = "bulwm.click"
+  private_zone = false
+}
+
+# selecting validation method
+resource "aws_route53_record" "bulwm" {
+  for_each = {
+    for dvo in aws_acm_certificate.bulwm.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_route53_zone.bulwm.zone_id
+}
+
+# validate the certificate through DNS method
+resource "aws_acm_certificate_validation" "bulwm" {
+  certificate_arn         = aws_acm_certificate.bulwm.arn
+  validation_record_fqdns = [for record in aws_route53_record.bulwm : record.fqdn]
+}
+
+# create records for tooling
+resource "aws_route53_record" "tooling" {
+  zone_id = data.aws_route53_zone.bulwm.zone_id
+  name    = "tooling.bulwm.click"
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.ext-alb.dns_name
+    zone_id                = aws_lb.ext-alb.zone_id
+    evaluate_target_health = true
+  }
+}
+
+# create records for wordpress
+resource "aws_route53_record" "wordpress" {
+  zone_id = data.aws_route53_zone.bulwm.zone_id
+  name    = "wordpress.bulwm.click"
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.ext-alb.dns_name
+    zone_id                = aws_lb.ext-alb.zone_id
+    evaluate_target_health = true
+  }
+}
+```
+## Create an external (Internet facing) and an Internal Application Load-Balancer (ALB)
+1. We will create an ALB that receives traffic from the internet and distributes it between the nginx reverse proxies and an internal load-balancers that receives traffic from the ngix reverse proxies and distributes to the web-servers. First, we will create the ALB, then the target group and lastly, we will create the listener rule. Create a file called `alb.tf` and paste the following code snippet:
+```
+# External loadbalancer
+resource "aws_lb" "ext-alb" {
+  name     = var.name
+  internal = false
+  security_groups = [var.public-sg]
+
+  subnets = [
+    var.public-subnet-1,
+    var.public-subnet-2,
+  ]
+
+   tags = merge(
+    var.tags,
+    {
+      Name = var.name
+    },
+  )
+
+  ip_address_type    = var.ip_address_type
+  load_balancer_type = var.load_balancer_type
+}
+
+# --- create a target group for the external load balancer
+
+resource "aws_lb_target_group" "nginx-tgt" {
+  health_check {
+    interval            = 10
+    path                = "/healthstatus"
+    protocol            = "HTTPS"
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+  }
+  name        = "nginx-tgt"
+  port        = 443
+  protocol    = "HTTPS"
+  target_type = "instance"
+  vpc_id      = var.vpc_id
+}
+
+# --- create listener for load balancer
+
+resource "aws_lb_listener" "nginx-listner" {
+  load_balancer_arn = aws_lb.ext-alb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  certificate_arn   = aws_acm_certificate_validation.bulwm.certificate_arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.nginx-tgt.arn
+  }
+}
+
+# ---Internal Load Balancers for webservers----
+
+resource "aws_lb" "ialb" {
+  name     = "ialb"
+  internal = true
+  security_groups = [var.private-sg]
+
+  subnets = [var.private-subnet-1,
+    var.private-subnet-2,]
+
+  tags = merge(
+    var.tags,
+    {
+      Name = "ACS-int-alb"
+    },
+  )
+
+  ip_address_type    = var.ip_address_type
+  load_balancer_type = var.load_balancer_type
+}
+
+# --- target group  for wordpress -------
+
+resource "aws_lb_target_group" "wordpress-tgt" {
+  health_check {
+    interval            = 10
+    path                = "/healthstatus"
+    protocol            = "HTTPS"
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+  }
+
+  name        = "wordpress-tgt"
+  port        = 443
+  protocol    = "HTTPS"
+  target_type = "instance"
+  vpc_id      = var.vpc_id
+}
+
+# --- target group for tooling -------
+
+resource "aws_lb_target_group" "tooling-tgt" {
+  health_check {
+    interval            = 10
+    path                = "/healthstatus"
+    protocol            = "HTTPS"
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+  }
+
+  name        = "tooling-tgt"
+  port        = 443
+  protocol    = "HTTPS"
+  target_type = "instance"
+  vpc_id      = aws_vpc.main.id
+}
+
+# For this aspect a single listener was created for the wordpress which is default,
+# A rule was created to route traffic to tooling when the host header changes
+
+resource "aws_lb_listener" "web-listener" {
+  load_balancer_arn = aws_lb.ialb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  certificate_arn   = aws_acm_certificate_validation.bulwm.certificate_arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.wordpress-tgt.arn
+  }
+}
+
+# listener rule for tooling target
+
+resource "aws_lb_listener_rule" "tooling-listener" {
+  listener_arn = aws_lb_listener.web-listener.arn
+  priority     = 99
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.tooling-tgt.arn
+  }
+
+  condition {
+    host_header {
+      values = ["tooling.bulwm.click"]
+    }
+  }
+}
+```
+To learn more about the argument needed for each resource, click the following links [ALB](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb), [Target group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group), [ALB-listener](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener)
+
+2. Add the following outputs to output.tf to print them on screen
+```
+output "alb_dns_name" {
+  value = aws_lb.ext-alb.dns_name
+}
+
+output "alb_target_group_arn" {
+  value = aws_lb_target_group.nginx-tgt.arn
+}
+```
+### Create Autoscaling groups
+Next, we will be creating Auto Scaling Group (ASG) to allow our architecture scale the EC2s in and out depending on the amount of traffic coming into our infrastructure. Before configuring an ASG, we need to create the launch template and the AMI the AGS needs. 
+
+Based on our architecture we need to create Auto-scaling groups for bastion, nginx, wordpress and tooling, so we will create two files; `asg-bastion-nginx.tf` will contain Launch template and austo-scaling group for Bastion and Nginx, then `asg-wordpress-tooling.tf` will contain Launch template and austo-scaling group for wordpress and tooling.
+
+
+
+
+
+
+Useful Terraform Documentation, go through this documentation and understand the arguement needed for each resources:
+
+SNS-topic
+SNS-notification
+Austoscaling
+Launch-template
+
+Create asg-bastion-nginx.tf and paste all the code snippet below;
