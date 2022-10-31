@@ -1,6 +1,7 @@
 ## AUTOMATE INFRASTRUCTURE WITH IAC USING TERRAFORM PART 2
-In continuation to [Project16](https://github.com/cynthia-okoduwa/DevOps-projects/blob/main/project16.md), in this project I created 
-1. For Networking, in addition to the VPC and subnets created in [Project16](https://github.com/cynthia-okoduwa/DevOps-projects/blob/main/project16.md):
+In continuation to [Project16](https://github.com/cynthia-okoduwa/DevOps-projects/blob/main/project16.md), in this project we continue to create the other resources in our architecture. The resources we will be creating includes:
+1. For Networking, in addition to the VPC and 2 public subnets created in project 16, we will also create:
+- 4 private subnets
 - Internet gateway
 - Nat gateway
 - Elastic IP, then allocate it to the Nat gateway
@@ -21,6 +22,27 @@ In continuation to [Project16](https://github.com/cynthia-okoduwa/DevOps-project
 - Elastic Filesystem
 - Relational Database (RDS)
 
+#### Create Private subnets
+1. Let's modify our code used in creating the public subnets and create the private subnets:
+```
+# Create private subnets
+resource "aws_subnet" "private" {
+  count                   = var.preferred_number_of_private_subnets == null ? length(data.aws_availability_zones.available.names) : var.preferred_number_of_private_subnets
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index + 2)
+  map_public_ip_on_launch = true
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+
+tags = merge(
+    var.tags,
+    {
+      Name = format("%s-PrivateSubnet-%s", var.name, count.index)
+    },
+  )
+
+}
+```
+
 #### Internet Gateways & format() function
 1. Create a new file and name it `internet_gateway.tf` then creat an Internet Gateway in file with the following code:
 ```
@@ -35,8 +57,8 @@ resource "aws_internet_gateway" "ig" {
   )
 }
 ```
-2. NAT Gateway
-Create a NAT Gateways and an Elastic IP (EIP) addresse and allocate the EIP to the NAT gateway. Create the NAT Gateway in a new file called `natgateway.tf` and use the following code snippet to create:
+#### NAT Gateway
+1. Create a NAT Gateways and an Elastic IP (EIP) addresse and allocate the EIP to the NAT gateway. Create the NAT Gateway in a new file called `natgateway.tf` and use the following code snippet to create:
 ```
 resource "aws_eip" "nat_eip" {
   vpc        = true
@@ -63,7 +85,8 @@ resource "aws_nat_gateway" "nat" {
   )
 }
 ```
-3. Next, create a file called route_tables.tf and inside it create routes for both public and private subnets, and a route for te the internet gateway, create the below resources. Ensure they are properly tagged.
+#### Route tables
+1. Next, create a file called `route_tables.tf``` and inside it create routes for both public and private subnets, and a route for te the internet gateway, create the below resources. Ensure they are properly tagged.
 ```
 # create private route table
 resource "aws_route_table" "private-rtb" {
@@ -119,9 +142,9 @@ resource "aws_route_table_association" "public-subnets-assoc" {
 - 1 EIP
 - 2 Route tables
 
-#### AWS Identity and Access Management
+#### AWS IDENTITY AND ACCESS MANAGEMENT
 
-Our EC2 instances that we will be creating later will need to have access to some resources in our infrastucture, We want to pass an IAM role them as required by the architecture.
+Our EC2 instances that we will be creating later will need to have access to some resources in our infrastucture, we want to pass an IAM role them as required by the architecture.
 
 1. Create **AssumeRole**: Assume Role uses Security Token Service (STS) API that returns a set of temporary security credentials that you can use to access AWS resources that you might not normally have access to. These temporary credentials consist of an access key ID, a secret access key, and a security token. Typically, you use AssumeRole within your account or for cross-account access. Add the following code to a new file named roles.tf and tag appropriately.
 ```
@@ -430,9 +453,9 @@ resource "aws_security_group_rule" "inbound-mysql-webserver" {
   security_group_id        = aws_security_group.datalayer-sg.id
 }
 ```
-## CREATE CERTIFICATE FROM AMAZON CERIFICATE MANAGER
-You would require a domain name                        Check out the terraform documentation for [AWS certificate manager]()
-1. Create cert.tf file and add the following code snippets to it.
+#### CREATE CERTIFICATE FROM AMAZON CERIFICATE MANAGER
+You would require a domain name for this part of the project. Be sure to check out the terraform documentation for [AWS certificate manager](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate)
+1. Create `cert.tf file` and add the following code snippets to it.
 NOTE: Read Through to change the domain name to your own domain name and every other name that needs to be changed.
 ```
 # The entire section create a certiface, public zone, and validate the certificate using DNS method
@@ -499,7 +522,7 @@ resource "aws_route53_record" "wordpress" {
   }
 }
 ```
-## Create an external (Internet facing) and an Internal Application Load-Balancer (ALB)
+#### Create an external (Internet facing) and an Internal Application Load-Balancer (ALB)
 1. We will create an ALB that receives traffic from the internet and distributes it between the nginx reverse proxies and an internal load-balancers that receives traffic from the ngix reverse proxies and distributes to the web-servers. First, we will create the ALB, then the target group and lastly, we will create the listener rule. Create a file called `alb.tf` and paste the following code snippet:
 ```
 # External loadbalancer
@@ -650,7 +673,7 @@ resource "aws_lb_listener_rule" "tooling-listener" {
 ```
 To learn more about the argument needed for each resource, click the following links [ALB](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb), [Target group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group), [ALB-listener](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener)
 
-2. Add the following outputs to output.tf to print them on screen
+2. Add the following outputs to `output.tf` to print them on screen
 ```
 output "alb_dns_name" {
   value = aws_lb.ext-alb.dns_name
@@ -660,19 +683,15 @@ output "alb_target_group_arn" {
   value = aws_lb_target_group.nginx-tgt.arn
 }
 ```
-### Create Autoscaling groups
+#### Create Autoscaling groups
 Next, we will be creating Auto Scaling Group (ASG) to allow our architecture scale the EC2s in and out depending on the amount of traffic coming into our infrastructure. Before configuring an ASG, we need to create the launch template and the AMI the AGS needs. 
+Based on our architecture we need to create Auto-scaling groups for bastion, nginx, wordpress and tooling, so we will create two files; `asg-bastion-nginx.tf` will contain Launch template and austo-scaling group for Bastion and Nginx, then `asg-wordpress-tooling.tf` will contain Launch template and austo-scaling group for wordpress and tooling. Here are some useful Terraform documentation, to understand the arguements needed for each resources:
+[SNS-topic](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic),
+[SNS-notification](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_notification),
+[Austoscaling](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_group),
+[Launch-template](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/launch_template).
 
-Based on our architecture we need to create Auto-scaling groups for bastion, nginx, wordpress and tooling, so we will create two files; `asg-bastion-nginx.tf` will contain Launch template and austo-scaling group for Bastion and Nginx, then `asg-wordpress-tooling.tf` will contain Launch template and austo-scaling group for wordpress and tooling.
-
-Useful Terraform Documentation, to understand the arguements needed for each resources:
-
-SNS-topic
-SNS-notification
-Austoscaling
-Launch-template
-
-1. Create asg-bastion-nginx.tf and paste all the code snippet below;
+1. Create `asg-bastion-nginx.tf` and paste all the code snippet below;
 ```
 # creating sns topic for all the auto scaling groups
 resource "aws_sns_topic" "cynthia-sns" {
@@ -984,7 +1003,7 @@ resource "aws_autoscaling_attachment" "asg_attachment_tooling" {
 ### STORAGE AND DATABASE
 The finial group of resources to create are the Elastic File System(EFS) and Relational Database Service(RDS).
 
-1. Create Elastic File System (EFS): In order to follow best practice in using EFS for file we need a KMS key. AWS Key Management Service (KMS) makes it easy for you to create and manage cryptographic keys and control their use across a wide range of AWS services and in your applications.
+1. Create Elastic File System (EFS): In order to follow best practice in using EFS for file sharing, we need a KMS key. AWS Key Management Service (KMS) makes it easy for you to create and manage cryptographic keys and control their use across a wide range of AWS services and in your applications.
 In order to create an EFS you need to create a KMS key.
 
 2. Crete a new file and name it `efs.tf` and paste the following in it. This would create the KMS key, EFS and the mount tragets for the the EFS:
