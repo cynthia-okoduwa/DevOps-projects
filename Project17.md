@@ -1001,12 +1001,12 @@ resource "aws_autoscaling_attachment" "asg_attachment_tooling" {
 ```
 
 ### STORAGE AND DATABASE
-The finial group of resources to create are the Elastic File System(EFS) and Relational Database Service(RDS).
+The final group of resources to create are the Elastic File System (EFS) and Relational Database Service (RDS).
 
-1. Create Elastic File System (EFS): In order to follow best practice in using EFS for file sharing, we need a KMS key. AWS Key Management Service (KMS) makes it easy for you to create and manage cryptographic keys and control their use across a wide range of AWS services and in your applications.
-In order to create an EFS you need to create a KMS key.
+1. Create Elastic File System (EFS): to follow best practice in using EFS for file sharing, we need a KMS key. AWS Key Management Service (KMS) makes it easy for you to create and manage cryptographic keys and control their use across a wide range of AWS services and in your applications.
+To create an EFS you need to create a KMS key.
 
-2. Crete a new file and name it `efs.tf` and paste the following in it. This would create the KMS key, EFS and the mount tragets for the the EFS:
+2. Create a new file and name it `efs.tf` and paste the following in it. This would create the KMS key, EFS and the mount targets for the the EFS:
 ```
 # create key from key management system
 resource "aws_kms_key" "ACS-kms" {
@@ -1138,8 +1138,8 @@ resource "aws_db_instance" "ACS-rds" {
 }
 ```
 ### VARIABLES.TF AND TERRAFORM.TFVARS
-So far we have created all the elements in our infrastructure, in the process of creating our resourecs we referenced variables that we have not yet declared. So if we try to apply this it would fail. This is where the variables.tf and terraform.tfvars file come it. We would use the variables.tf file to declare all the variables that we created references for in our resources and then use the terraform.tfvars file to give values to these variables.
-1. Create a new file and name it `variables.tf` then declare all the varibles you had earlier referenced in your reources. You code should look like this:
+So far, we have created all the elements in our infrastructure, in the process of creating our resources we referenced variables that we have not yet declared. So if we try to apply this it would fail. This is where the variables.tf and terraform.tfvars files come it. We would use the variables.tf file to declare all the variables that we referenced while creating our resources and then use the terraform.tfvars file to give value to these variables.
+1. Create a new file and name it `variables.tf` then declare all the variables you had earlier referenced in your resources. You code should look like this:
 ```
 variable "region" {
   default = "us-east-1"
@@ -1211,7 +1211,7 @@ variable "master-password" {
   description = "RDs admin password"
 }
 ```
-3. Then create anothe file and name it `terraform.tfvars` and give your declared variables value, like this:
+3. Then create another file and name it `terraform.tfvars` and give your declared variables value, like this:
 ```
 variable "region" {
   default = "us-east-1"
@@ -1283,8 +1283,19 @@ variable "master-password" {
   description = "RDs admin password"
 }
 ```
-At this point, our infrastructure elements are ready to be deployed automatically, but before we plan and apply our code we need to take note of two things;
-- Our list of files are long and confusing but not bad for a start, we are going to fix this using the concepts of Modules.
-- Secondly, our application won't work becuase in the shell script that was passed into the launch some endpoints like the RDs and EFS point is needed that have not been created yet. we would use  Ansible to fix this.
+At this point, our infrastructure elements are ready to be deployed automatically, but before we plan and apply the code we need to take note of two things;
+- Our list of files is long and confusing but not bad for a start, we are going to fix this using the concepts of Modules.
+- Secondly, our application won't work because in the shell script that was passed into the launch some endpoints like the RDs and EFS point is needed that have not been created yet. we would use  Ansible to fix this.
 4. Finally, plan and apply your Terraform codes, explore the resources in AWS console and make sure you destroy them right away to avoid massive costs.
+![pix15](https://user-images.githubusercontent.com/74002629/199027421-dde0d5b0-82c1-4412-a5c0-89a8ac0e5c70.PNG)
+![pix4a](https://user-images.githubusercontent.com/74002629/199027016-33e0adb3-4e8b-4f64-aaac-436c897552cf.PNG)
+![pix4b](https://user-images.githubusercontent.com/74002629/199027039-2c19d46c-9c1c-4d70-b8c5-d5b759664a61.PNG)
+![pix4c](https://user-images.githubusercontent.com/74002629/199027061-f372a0b4-507d-42c7-a8c1-f2e553af1880.PNG)
+![pix4d](https://user-images.githubusercontent.com/74002629/199027103-45e49d37-5cf1-4e65-bb2d-4038cfbfcd28.PNG)
+![pix5](https://user-images.githubusercontent.com/74002629/199027119-b7c50219-f06b-4ad6-8820-e0343fb6d618.PNG)
+![pix6](https://user-images.githubusercontent.com/74002629/199027129-8c28a96d-1e36-4b38-82f7-bfe74f8cd6b7.PNG)
+![pix7](https://user-images.githubusercontent.com/74002629/199027144-86a4be90-2def-46e9-8f00-6ed80da571c2.PNG)
+![pix11](https://user-images.githubusercontent.com/74002629/199027258-ec2710cd-0b64-4dad-8303-4c955ad0e785.PNG)
+![pix13](https://user-images.githubusercontent.com/74002629/199027314-983e672b-95c6-4b70-a621-21dba46148a8.PNG)
+![pix14](https://user-images.githubusercontent.com/74002629/199027371-5a9fd2ae-88bb-492f-ba27-d6e0b01cc3c8.PNG)
 
