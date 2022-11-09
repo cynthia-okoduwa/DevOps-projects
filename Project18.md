@@ -635,9 +635,9 @@ resource "aws_launch_template" "tooling-launch-template" {
 }
 ```
 - `bastion.sh` - same as [project 17](https://github.com/darey-devops/PBL-project-17)
-- `nginx.sh` - same as [project 17](https://github.com/darey-devops/PBL-project-17
-- `tooling.sh` - same as [project 17](https://github.com/darey-devops/PBL-project-17
-- `wordpress.sh` - same as [project 17](https://github.com/darey-devops/PBL-project-17
+- `nginx.sh` - same as [project 17](https://github.com/darey-devops/PBL-project-17)
+- `tooling.sh` - same as [project 17](https://github.com/darey-devops/PBL-project-17)
+- `wordpress.sh` - same as [project 17](https://github.com/darey-devops/PBL-project-17)
 - `variables.tf` - All the variables you declared within the module is to be defined here:
 ```
 variable "ami-web" {
