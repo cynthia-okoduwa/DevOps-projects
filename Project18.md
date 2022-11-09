@@ -634,10 +634,10 @@ resource "aws_launch_template" "tooling-launch-template" {
   user_data = filebase64("${path.module}/tooling.sh")
 }
 ```
-- `bastion.sh` - 
-- `nginx.sh` -
-- `tooling.sh` -
-- `wordpress.sh` -
+- `bastion.sh` - same as [project 17](https://github.com/darey-devops/PBL-project-17)
+- `nginx.sh` - same as [project 17](https://github.com/darey-devops/PBL-project-17
+- `tooling.sh` - same as [project 17](https://github.com/darey-devops/PBL-project-17
+- `wordpress.sh` - same as [project 17](https://github.com/darey-devops/PBL-project-17
 - `variables.tf` - All the variables you declared within the module is to be defined here:
 ```
 variable "ami-web" {
@@ -1802,7 +1802,29 @@ resource "aws_dynamodb_table" "terraform_locks" {
   }
 }
 ```
-3. Create `backend.tf` file in the root directory 
-- backend.tf
+3. Create `backend.tf` file in the root directory. Before we configure backend, Terraform expects that both S3 bucket and DynamoDB resources are already created before we configure the backend. So, let us run `terraform apply` to provision resources. 
+4. Next create backend on S3 with the following code:
+```
+terraform {
+   backend "s3" {
+     bucket         = "cynthiaspbl18"
+     key            = "global/s3/terraform.tfstate"
+     region         = "us-east-1"
+     dynamodb_table = "terraform-locks"
+     encrypt        = true
+   }
+ }
+ ```
+ 5. Re-initialize the backend with `terraform init`. Run terraform init and confirm you are happy to change the backend by typing `yes`
+ 6. Verify the changes, if you opened AWS now to see what happened you should be able to see the following:
+- tfstatefile is now inside the S3 bucket
+- DynamoDB table which we create has an entry which includes state file status
+![pix5](https://user-images.githubusercontent.com/74002629/200835764-156977a8-b02b-446f-b2fc-0eeb3397cefe.PNG)
+![pix6](https://user-images.githubusercontent.com/74002629/200835791-72c13d30-8b23-4451-93e5-6df6e83bb794.PNG)
+![pix8](https://user-images.githubusercontent.com/74002629/200835887-2b8e1f6b-3549-4ab8-83a9-f2411217e830.PNG)
+![pix9](https://user-images.githubusercontent.com/74002629/200835958-05387704-f520-42d3-b094-2f63bb4d5896.PNG)
+
+7. To end the project, remember to destroy every resource you created. But before you destory make sure to migrate the backend back to your local machine by running `terraform init -migrate-state`
+8. After maigrating the backend, run `terraform destroy` to destroy all the resources created.
 
 
