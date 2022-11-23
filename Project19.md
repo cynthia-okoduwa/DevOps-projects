@@ -30,8 +30,191 @@ we would be making changes to our our existing respository from Project 18. Add 
 - AMI: for building packer images
 - Ansible: for Ansible scripts to configure the infrastucture
 9. Install the following tools on your local machine:
-- [Packer](https://developer.hashicorp.com/packer/tutorials/docker-get-started/get-started-install-cli)
+- [Packer](https://developer.hashicorp.com/packer/tutorials/docker-get-started/get-started-install-cli) To create custom images that are immutable and prodduction ready.
 - [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
 
 #### Create AMI using Packer
+1. Terraform-cloud file structure create a new folder and name it `AMI`, the move all the .sh files from project 19 into it.(bastion.sh, ubuntu.sh, web.sh, nginx.sh)
+2. Create 4 new files in the folder and name them as `bastion.pkr.hcl`, `nginx.pkr.hcl`, `web.pkr.hcl` and `ubuntu.pkr.hcl` respectively.
+3. Inside the `bastion.pkr.hcl` paste the following user data :
+```
+variable "region" {
+  type    = string
+  default = "us-east-2"
+}
+
+locals {
+  timestamp = regex_replace(timestamp(), "[- TZ:]", "")
+}
+
+
+# source blocks are generated from your builders; a source can be referenced in
+# build blocks. A build block runs provisioners and post-processors on a
+# source.
+source "amazon-ebs" "terraform-bastion-prj-19" {
+  ami_name      = "terraform-bastion-prj-19-${local.timestamp}"
+  instance_type = "t2.micro"
+  region        = var.region
+  source_ami_filter {
+    filters = {
+      name                = "RHEL-SAP-8.2.0_HVM-20211007-x86_64-0-Hourly2-GP2"
+      root-device-type    = "ebs"
+      virtualization-type = "hvm"
+    }
+    most_recent = true
+    owners      = ["309956199498"]
+  }
+  ssh_username = "ec2-user"
+  tag {
+    key   = "Name"
+    value = "terraform-bastion-prj-19"
+  }
+}
+
+# a build block invokes sources and runs provisioning steps on them.
+build {
+  sources = ["source.amazon-ebs.terraform-bastion-prj-19"]
+
+  provisioner "shell" {
+    script = "bastion.sh"
+  }
+}
+```
+4. Inside `nginx.pkr.hcl` paste:
+```
+variable "region" {
+  type    = string
+  default = "us-east-2"
+}
+
+locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
+
+
+# source blocks are generated from your builders; a source can be referenced in
+# build blocks. A build block runs provisioners and post-processors on a
+# source.
+source "amazon-ebs" "terraform-nginx-prj-19" {
+  ami_name      = "terraform-nginx-prj-19-${local.timestamp}"
+  instance_type = "t2.micro"
+  region        = var.region
+  source_ami_filter {
+    filters = {
+      name                = "RHEL-SAP-8.2.0_HVM-20211007-x86_64-0-Hourly2-GP2"
+      root-device-type    = "ebs"
+      virtualization-type = "hvm"
+    }
+    most_recent = true
+    owners      = ["309956199498"]
+  }
+  ssh_username = "ec2-user"
+  tag {
+    key   = "Name"
+    value = "terraform-nginx-prj-19"
+  }
+}
+
+
+# a build block invokes sources and runs provisioning steps on them.
+build {
+  sources = ["source.amazon-ebs.terraform-nginx-prj-19"]
+
+  provisioner "shell" {
+    script = "nginx.sh"
+  }
+}
+```
+5. Inside `ubuntu.pkr.hcl` paste:
+```
+variable "region" {
+  type    = string
+  default = "us-east-2"
+}
+
+locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
+
+
+# source blocks are generated from your builders; a source can be referenced in
+# build blocks. A build block runs provisioners and post-processors on a
+# source.
+source "amazon-ebs" "terraform-ubuntu-prj-19" {
+  ami_name      = "terraform-ubuntu-prj-19-${local.timestamp}"
+  instance_type = "t2.micro"
+  region        = var.region
+  source_ami_filter {
+    filters = {
+      name                = "ubuntu/images/*ubuntu-xenial-16.04-amd64-server-*"
+      root-device-type    = "ebs"
+      virtualization-type = "hvm"
+    }
+    most_recent = true
+    owners      = ["099720109477"]
+  }
+  ssh_username = "ubuntu"
+  tag {
+    key   = "Name"
+    value = "terraform-ubuntu-prj-19"
+  }
+}
+
+
+# a build block invokes sources and runs provisioning steps on them.
+build {
+  sources = ["source.amazon-ebs.terraform-ubuntu-prj-19"]
+
+  provisioner "shell" {
+    script = "ubuntu.sh"
+  }
+}
+```
+6. For web.pkr.hcl, paste:
+```
+variable "region" {
+  type    = string
+  default = "us-east-2"
+}
+
+locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
+
+
+# source blocks are generated from your builders; a source can be referenced in
+# build blocks. A build block runs provisioners and post-processors on a
+# source.
+source "amazon-ebs" "terraform-web-prj-19" {
+  ami_name      = "terraform-web-prj-19-${local.timestamp}"
+  instance_type = "t2.micro"
+  region        = var.region
+  source_ami_filter {
+    filters = {
+      name                = "RHEL-SAP-8.2.0_HVM-20211007-x86_64-0-Hourly2-GP2"
+      root-device-type    = "ebs"
+      virtualization-type = "hvm"
+    }
+    most_recent = true
+    owners      = ["309956199498"]
+  }
+  ssh_username = "ec2-user"
+  tag {
+    key   = "Name"
+    value = "terraform-web-prj-19"
+  }
+}
+
+
+# a build block invokes sources and runs provisioning steps on them.
+build {
+  sources = ["source.amazon-ebs.terraform-web-prj-19"]
+
+  provisioner "shell" {
+    script = "web.sh"
+  }
+}
+```
+7. These Packer configurations will make use of the user data provided in their respective .sh files.
+8. Next in your terminal. navigate to the terraform-cloud directory and begin building your AMI. Type `packer build <name of packer file>` to build each packer AMI
+9. Once build is complete, you should see your Web, Bastion, Nginx and Ubuntu AMIs in your AWS console.
+![AMIs](https://user-images.githubusercontent.com/74002629/203560607-aba1b0bb-e8ac-461e-8d11-f490fe18afe2.PNG)
+
+
+
+
 
