@@ -25,7 +25,7 @@ to prevents them from being displayed in the Terraform Cloud web UI and makes th
 For the Terraform variables instead entering each variable we have created in our `variables.tfvars` file here, simply change the file name from `variables.tfvars` to `variables.auto.tfvars` in the terraform-cloud directory structure. Terraform cloud will automatically pick the vaules in the file directly.
 After you have set the 2 variables – your Terraform Cloud is all set to apply the codes from GitHub and create all necessary AWS resources.
 8. Now it is time to run our Terrafrom scripts, we would be using Packer to build our images in this project, and Ansible to configure the infrastructure, so for that 
-we would be making changes to our our existing respository from Project 18. Add the following folders in your code structure:
+we would be making changes to our our existing respository from [Project 18](https://github.com/cynthia-okoduwa/DevOps-projects/blob/main/Project18.md). Add the following folders in your code structure:
 - AMI: for building packer images
 - Ansible: for Ansible scripts to configure the infrastucture
 9. Install the following tools on your local machine:
