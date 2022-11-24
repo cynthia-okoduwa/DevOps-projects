@@ -1,8 +1,7 @@
 ## Automate Infrastructure With IaC using Terraform. Part 4 – Terraform Cloud
+![Capture](https://user-images.githubusercontent.com/74002629/203817812-62cf36bc-623c-4182-b139-da2580de548b.PNG)
 
-This is the concluding part of the 4 part project on Infrastructure as code using terrraform.
-In the previous projects we built infrastructure for a      architecture on our local machines. I this project we would be building the same architecture but this
-Terraform Cloud. Terraform Cloud is a managed service that provides you with Terraform CLI to provision infrastructure, either on demand or in response to various events.
+This is the concluding part of the 4-part project on Infrastructure as Code using terraform. In the previous projects we built infrastructure for our architecture on our local machines. In this project we would be building the same architecture but this time with Terraform Cloud. Terraform Cloud is a managed service that provides you with Terraform CLI to provision infrastructure, either on demand or in response to various events.
 
 #### Migrate your .tf codes to Terraform Cloud
 ##### Steps
@@ -32,7 +31,7 @@ we would be making changes to our our existing respository from Project 18. Add 
 - Ansible: for Ansible scripts to configure the infrastucture
 9. Install the following tools on your local machine:
 - [Packer](https://developer.hashicorp.com/packer/tutorials/docker-get-started/get-started-install-cli) To create custom images that are immutable and prodduction ready.
-- [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
+- [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) for your server configuration.
 
 #### Create AMI using Packer
 1. Terraform-cloud file structure create a new folder and name it `AMI`, the move all the .sh files from project 19 into it.(bastion.sh, ubuntu.sh, web.sh, nginx.sh)
