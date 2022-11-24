@@ -18,7 +18,6 @@ and settings and it will run your commands in the cloud and make use of that sta
  in your GitHub and call it `terraform-cloud`, push your Terraform codes developed in the previous projects to the repository.
 5. Choose Version Control Workflow and you will be promped to connect to your Version Control system account to your workspace (choose which ever suits you). 
 You will be required to register a new OAuth Application – follow the prompt and connect your newly created repository to the workspace.
- the prompt and add your newly created repository to the workspace.
 6. Move on to "Configure settings", provide a description for your workspace and leave all the remaining settings as default, click "Create workspace"
 7. Configure variables. Terraform Cloud supports two types of variables: Environment variables and Terraform variables. Either type can be marked as sensitive, 
 to prevents them from being displayed in the Terraform Cloud web UI and makes them write-only. We will set two environment variables: **AWS_ACCESS_KEY_ID** and 
