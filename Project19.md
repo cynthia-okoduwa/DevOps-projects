@@ -23,8 +23,9 @@ You will be required to register a new OAuth Application – follow the prompt a
 6. Move on to "Configure settings", provide a description for your workspace and leave all the remaining settings as default, click "Create workspace"
 7. Configure variables. Terraform Cloud supports two types of variables: Environment variables and Terraform variables. Either type can be marked as sensitive, 
 to prevents them from being displayed in the Terraform Cloud web UI and makes them write-only. We will set two environment variables: **AWS_ACCESS_KEY_ID** and 
-**AWS_SECRET_ACCESS_KEY**, set the values that you used in Project 16. These credentials will be used to privision your AWS infrastructure by Terraform Cloud.
-After you have set these 2 environment variables – your Terraform Cloud is all set to apply the codes from GitHub and create all necessary AWS resources.
+**AWS_SECRET_ACCESS_KEY**, set the values that you used in Project 16. These credentials will be used to provision your AWS infrastructure by Terraform Cloud.
+For the Terraform variables instead entering each variable we have created in our `variables.tfvars` file here, simply change the file name from `variables.tfvars` to `variables.auto.tfvars` in the terraform-cloud directory structure. Terraform cloud will automatically pick the vaules in the file directly.
+After you have set the 2 variables – your Terraform Cloud is all set to apply the codes from GitHub and create all necessary AWS resources.
 8. Now it is time to run our Terrafrom scripts, we would be using Packer to build our images in this project, and Ansible to configure the infrastructure, so for that 
 we would be making changes to our our existing respository from Project 18. Add the following folders in your code structure:
 - AMI: for building packer images
@@ -210,9 +211,16 @@ build {
 }
 ```
 7. These Packer configurations will make use of the user data provided in their respective .sh files.
-8. Next in your terminal. navigate to the terraform-cloud directory and begin building your AMI. Type `packer build <name of packer file>` to build each packer AMI
+8. Next in your terminal, navigate to the terraform-cloud directory and begin building your AMI. Type `packer build <name of packer file>` to build each packer AMI
 9. Once build is complete, you should see your Web, Bastion, Nginx and Ubuntu AMIs in your AWS console.
 ![AMIs](https://user-images.githubusercontent.com/74002629/203560607-aba1b0bb-e8ac-461e-8d11-f490fe18afe2.PNG)
+10. Copy the AMI ID of each AMI created and update the terraform.auto.tfvars file with the newly created AMIs.
+![AMI ID](https://user-images.githubusercontent.com/74002629/203724846-2ec829c7-3795-4366-9d00-309b3e4c988f.PNG)
+11. Push all your changes to the `terraform-cloud` repository.
+12. Next in the Terraform cloud UI, run your first plan, if all goes well, run Apply. You will see your AWS resources being created.
+![Pix2](https://user-images.githubusercontent.com/74002629/203728085-305eb60b-fa6b-433b-8f46-c88377f42ad3.PNG)
+13. You have successfully created your resources using Terraform cloud. When you go into your AWS console you should see all the resources you have created, however our instances in the target group have failed health checks, beacause we have not configured the instances. Let's fix that.
+14.  
 
 
 
