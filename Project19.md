@@ -214,13 +214,21 @@ build {
 8. Next in your terminal, navigate to the terraform-cloud directory and begin building your AMI. Type `packer build <name of packer file>` to build each packer AMI
 9. Once build is complete, you should see your Web, Bastion, Nginx and Ubuntu AMIs in your AWS console.
 ![AMIs](https://user-images.githubusercontent.com/74002629/203560607-aba1b0bb-e8ac-461e-8d11-f490fe18afe2.PNG)
-10. Copy the AMI ID of each AMI created and update the terraform.auto.tfvars file with the newly created AMIs.
+10. Copy the AMI ID of each AMI created and update the terraform.auto.tfvars file with the newly created AMIs. Note: the Ubuntu AMI will be used for Sonarqube.
 ![AMI ID](https://user-images.githubusercontent.com/74002629/203724846-2ec829c7-3795-4366-9d00-309b3e4c988f.PNG)
 11. Push all your changes to the `terraform-cloud` repository.
 12. Next in the Terraform cloud UI, run your first plan, if all goes well, run Apply. You will see your AWS resources being created.
 ![Pix2](https://user-images.githubusercontent.com/74002629/203728085-305eb60b-fa6b-433b-8f46-c88377f42ad3.PNG)
 13. You have successfully created your resources using Terraform cloud. When you go into your AWS console you should see all the resources you have created, however our instances in the target group have failed health checks, beacause we have not configured the instances. Let's fix that.
-14.  
+14. In our terraform code, remove the instances as listeners and attachment to auto scaling groups. Comment out the nginx, loadbalancer and tooling listeners in the ALB module of your terraform code. and also comment out the attachment of autoscaling groups to the load balancers in the Autoscaling module of your terraform code. We are doing this to prevent issues till we have run our configurations, then we can reapply them.
+15. Push your changes and Terraform cloud with Plan and Apply automatically
+
+#### Update Ansible script with values from Terraform output.
+1. Next we would be updating the Ansible script with values from terraform output. 
+2. SSH into your Bastion server using SSH agent and clone down your repository.
+3. Ansible will need to have access to your AWS accout to pull down the IP addresses of your instances, we will need to give Ansible access. Enter `aws configure` in your ansible directory, then follow the prompt and provide your secret key and access key to give Ansible access.
+4. Ensure Ansible can pull down the required IPs by runing: `ansible-inventory -i invetory/aws.ec2.yml --graph` 
+5. Update the nginx role with DNS name for the laodbalancer. Go into your loadbalancer in your AWS console and copy the DNS name for the loadbalance and paste it in the nginx role.
 
 
 
