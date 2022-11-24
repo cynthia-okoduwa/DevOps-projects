@@ -229,6 +229,13 @@ build {
 3. Ansible will need to have access to your AWS accout to pull down the IP addresses of your instances, we will need to give Ansible access. Enter `aws configure` in your ansible directory, then follow the prompt and provide your secret key and access key to give Ansible access.
 4. Ensure Ansible can pull down the required IPs by runing: `ansible-inventory -i invetory/aws.ec2.yml --graph` 
 5. Update the nginx role with DNS name for the laodbalancer. Go into your loadbalancer in your AWS console and copy the DNS name for the loadbalance and paste it in the nginx role.
+6. Next update the RDS end-point in the tooling/tasks/setup-db.yml  and wordpress/tasks/setup-db.yml files (You get this from your AWS console from the RDS you provisioned) Update it for the database and tooling credentials.
+7. Also update your username name and password to correspond to what you have in your terraform.auto.tfvars
+8. Next, update the access points of your filesystem for both the tooling and the wordpress site. it is located in `Ansible/roles/tooling/tasks/main.yml` and `Ansible/roles/wordpress/tasks/main.yml` respectively.
+9. In the Ansible folder, create an ansible.cfg file and specify your roles path to allow Ansible find the roles when it runs, then run `export ANSIBLE_CONFIG=<path to your ansible.cfg file>` in the terminal to tell ansible where to find the roles
+10. Now run Ansible playbook against your environment. `ansible-playbook -i invetory/aws.ec2.yml playbooks/site.yml` If all goes well, you should see your playbook running.
+11. Now we get into our Bastion server via SSH agent. Type `ssh -A ec2-user@<Bastion-Public-IP>` from her we can get into the other servers in the architecture.
+12. To get into the other servers from the Bastion, enter `ssh ec2-user@<Private-IP-of-target-server>
 
 
 
