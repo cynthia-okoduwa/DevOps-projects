@@ -232,8 +232,11 @@ build {
 8. Next, update the access points of your filesystem for both the tooling and the wordpress site. it is located in `Ansible/roles/tooling/tasks/main.yml` and `Ansible/roles/wordpress/tasks/main.yml` respectively.
 9. In the Ansible folder, create an ansible.cfg file and specify your roles path to allow Ansible find the roles when it runs, then run `export ANSIBLE_CONFIG=<path to your ansible.cfg file>` in the terminal to tell ansible where to find the roles
 10. Now run Ansible playbook against your environment. `ansible-playbook -i invetory/aws.ec2.yml playbooks/site.yml` If all goes well, you should see your playbook running.
-11. Now we get into our Bastion server via SSH agent. Type `ssh -A ec2-user@<Bastion-Public-IP>` from her we can get into the other servers in the architecture.
-12. To get into the other servers from the Bastion, enter `ssh ec2-user@<Private-IP-of-target-server>
+11. Now we get into your Bastion server via SSH agent. Type `ssh -A ec2-user@<Bastion-Public-IP>` and from inside the bastion we can get into the other servers in the architecture.
+12. To get into the other servers from the Bastion using SSH agent, enter the command `ssh ec2-user@<Private-IP-of-target-server>
+13. Once inside your Nginx server run `sudo systemctl status nginx` to verify the server is running, the `sudo vi /etc/nginx/nginx.conf` to verify everything was configured correctly.
+14. SSH into your tooling and wordpress servers respectively and run `df -h` to verify that the filesystem was successfully mounted and `sudo systemctl status httpd` to verif Apache is running.
+15. in each server run change directory to `cd /var/www/html/` to see the health status of your servers, and `curl localhost` to see the webserver running in your local machine.
 
 
 
