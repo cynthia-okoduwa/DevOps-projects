@@ -424,6 +424,7 @@ cfssl gencert \
 }
 ```
 **Create the other certificates**
+
 Create certificates for the following Kubernetes components: Scheduler Client Certificate, Kube Proxy Client Certificate, Controller Manager Client Certificate, Kubelet Client Certificates, and K8s admin user Client Certificate.
 
 1. **kube-scheduler** Client Certificate and Private Key
@@ -596,4 +597,55 @@ cfssl gencert \
   -profile=kubernetes \
   admin-csr.json | cfssljson -bare admin
 }
+```
+5. **Token Controller** certificate and private key: Token controllers is a part of the Kubernetes Controller Manager kube-controller-manager responsible for generating and signing service account tokens which are used by pods or other resources to establish connectivity to the api-server. Read more about Service Accounts from the official documentation.
+```
+{
+
+cat > service-account-csr.json <<EOF
+{
+  "CN": "service-accounts",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "UK",
+      "L": "England",
+      "O": "Kubernetes",
+      "OU": "DAREY.IO DEVOPS",
+      "ST": "London"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=kubernetes \
+  service-account-csr.json | cfssljson -bare service-account
+}
+```
+Well done! you are done with creating PKI.
+	
+	
+### Step 4 – Distribute the Client and Server Certificates
+
+Now it is time to send all the client and server certificates we created to their respective instances.
+
+1. Let us begin with the worker nodes:
+
+We will copy these files securely to the worker nodes using **scp** utility: Root CA certificate – ca.pem, X509 Certificate for each worker node and Private Key of the certificate for each worker node
+```
+for i in 0 1 2; do
+  instance="${NAME}-worker-${i}"
+  external_ip=$(aws ec2 describe-instances \
+    --filters "Name=tag:Name,Values=${instance}" \
+    --output text --query 'Reservations[].Instances[].PublicIpAddress')
+  scp -i ../ssh/${NAME}.id_rsa \
+    ca.pem ${instance}-key.pem ${instance}.pem ubuntu@${external_ip}:~/; \
+done
 ```
