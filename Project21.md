@@ -18,6 +18,8 @@ enter `json` for your default output format.
 ```
 5. Type `aws ec2 describe-vpcs` to test AWSCLI.
 6. It should give you a list of available VPCs in the region you selected of the account.
+![pix2](https://user-images.githubusercontent.com/74002629/222396569-fde9059f-e29e-4fcc-b4bc-b7286fa4a48f.PNG)
+
 
 ### Install Kubectl on Linux machine
 Kubectl is a tool that allows you easily interact with Kubernetes to deploy applications, inspect and manage cluster resources, view logs and perform many more administrative operations instead of using **curl** everytime you need to send commands to the Kubernetes cluster API. To install Kubectl:
@@ -35,6 +37,8 @@ https://storage.googleapis.com/kubernetes-the-hard-way/cfssl/1.4.1/linux/cfssljs
 ```
 2. Make it executeable: `chmod +x cfssl cfssljson`
 3. Move it to binary directory: `sudo mv cfssl cfssljson /usr/local/bin/`
+
+![pix1](https://user-images.githubusercontent.com/74002629/222396500-8db2f7d7-ae1f-4d57-9ca7-d87f317ccd5a.PNG)
 
 ##PROVISION AWS CLOUD RESOURCES FOR KUBERNETES CLUSTER
 
@@ -72,6 +76,8 @@ aws ec2 modify-vpc-attribute \
 --vpc-id ${VPC_ID} \
 --enable-dns-hostnames '{"Value": true}'
 ```
+![pix5](https://user-images.githubusercontent.com/74002629/222396701-cb37ca47-1ecf-43b1-8712-40ba0aaaa229.PNG)
+
 **Set AWS Region**
 
 1. Set the required region: `AWS_REGION=us-east-2`
@@ -119,9 +125,8 @@ aws ec2 create-route \
   --gateway-id ${INTERNET_GATEWAY_ID}
 ```
 Your output should look like this:
-```
-Output:
 
+```
 {
     "AssociationId": "rtbassoc-07a8877e92504def7",
     "AssociationState": {
@@ -132,6 +137,8 @@ Output:
     "Return": true
 }
 ```
+![pix6](https://user-images.githubusercontent.com/74002629/222396743-c39f54fc-aa6e-40ca-a477-d1c7ff76141d.PNG)
+
 **Security Groups**
 1. To configure security groups, create seecurity group and tag it: 
 ```
@@ -201,6 +208,8 @@ TARGET_GROUP_ARN=$(aws elbv2 create-target-group \
   --target-type ip \
   --output text --query 'TargetGroups[].TargetGroupArn')
 ```
+![pix8](https://user-images.githubusercontent.com/74002629/222396817-1c99aca2-1326-492a-809a-3c536fc3647f.PNG)
+
 **Register targets**
 Just like above, no real targets. You will just put the IP addresses so that, when the nodes become available, they will be used as targets
 ```
@@ -298,6 +307,7 @@ for i in 0 1 2; do
     --tags "Key=Name,Value=${NAME}-worker-${i}"
 done
 ```
+![pix9](https://user-images.githubusercontent.com/74002629/222396855-7b2138de-4440-4d1e-a538-1898e1cb1356.PNG)
 ### Step 3 Prepare The Self-Signed Certificate Authority And Generate TLS Certificates
 
 The following components running on the Master node will require TLS certificates: Kube controller manager, Kube scheduler, Etcd, and Kube apiserver. On the Worker nodes the following componets will require TLS certificates: Kubelet, Kube-proxy. 
@@ -352,8 +362,8 @@ cfssl gencert -initca ca-csr.json | cfssljson -bare ca
 }
 ```
 
-You should get an output like this (put your pix)
-2. List the directory to see the created files: `ls -ltr` (pix)
+2. List the directory to see the created files: `ls -ltr`
+![pix10](https://user-images.githubusercontent.com/74002629/222396884-ecc1e7f8-6b5e-47cb-8e4d-4ac4e78430b5.PNG)
 3. The 3 important files here are: **ca.pem** – The Root Certificate, **ca-key.pem** – The Private Key, and **ca.csr** – The Certificate Signing Request.
 
 ### Generating TLS Certificates For Client and Server
@@ -568,7 +578,7 @@ EOF
     ${NAME}-worker-${i}-csr.json | cfssljson -bare ${NAME}-worker-${i}
 done
 ```
-5. **kubernetes admin user**'s Client Certificate and Private Key
+5. **kubernetes admin user's** Client Certificate and Private Key
 ```
 {
 cat > admin-csr.json <<EOF
@@ -650,6 +660,7 @@ for i in 0 1 2; do
 done
 ```
 You should get an output like this:
+![pix11](https://user-images.githubusercontent.com/74002629/222403309-a4d3e4b7-5e12-44f4-a6d0-c4eaf93c3ae6.PNG)
 	
 2. Next we will send the api-server related files to the Master or Controller nodes:
 ```
@@ -706,9 +717,9 @@ instance_hostname="ip-172-31-0-2${i}"
   kubectl config use-context default --kubeconfig=${instance}.kubeconfig
 done
 ```
-Your output should look like this:
-	
+![pix20](https://user-images.githubusercontent.com/74002629/222403668-dd4852be-3ffd-4c93-b7e2-6b34b80a41d3.PNG)	
 3. List the output: `ls -ltr *.kubeconfig`
+![pix21](https://user-images.githubusercontent.com/74002629/222406466-b95d3002-61ee-42e2-a68a-3e7dbc695a04.PNG)
 
 4. Generate the kube-proxy kubeconfig:
 ```
@@ -803,7 +814,7 @@ Notice that the --server is set to use 127.0.0.1. This is because, this componen
   kubectl config use-context default --kubeconfig=admin.kubeconfig
 }
 ```
-8. Distribute the files to their respective servers, using scp and a for loop:
+8. Distribute the files to their respective servers, using **scp** and a for loop:
 ```
 # This would distribute the kube-proxy, and individual workers to the server
 for i in 0; do
@@ -833,7 +844,7 @@ for i in 2; do
     kube-proxy.kubeconfig k8s-cluster-from-ground-up-worker-${i}.kubeconfig ubuntu@${external_ip}:~/; \
 done
 ```
-Because we don't want ...
+![pix22](https://user-images.githubusercontent.com/74002629/222406499-57c9b4f4-85f0-4781-8a70-e40858352d44.PNG)
 
 ```
 # This would distribute the admin, controller and scheduler to the master nodes
@@ -846,15 +857,18 @@ for i in 0 1 2; do
     admin.kubeconfig kube-scheduler.kubeconfig kube-controller-manager.kubeconfig ubuntu@${external_ip}:~/; \
 done
 ```
-
-### Step 6 Prepare the etcd database for encryption at rest.
+![pix23](https://user-images.githubusercontent.com/74002629/222406530-705cec39-9d64-4bef-a3ac-b55bc0dbd046.PNG)
+	
+##STEP 6- PREPARE THE ETCD DATABASE FOR ENCRYPTION AT REST
 	
 Kubernetes uses **etcd** (a distributed key value store) to store variety of data including the cluster state, application configurations, and secrets. By default, the data that is persisted to the disk is not encrypted making it a security risk for Kubernetes that needs to be addressed. To mitigate this risk, we must prepare to encrypt etcd at rest.
 
-1. Generate the encryption key and encode it using base64: `ETCD_ENCRYPTION_KEY=$(head -c 64 /dev/urandom | base64)` 
+1. Generate the encryption key and encode it using base64: `ETCD_ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64)` 
 To see the output that will be generated when called, run: `echo $ETCD_ENCRYPTION_KEY`
 
 OUTPUT:
+![pix24](https://user-images.githubusercontent.com/74002629/222406561-56677bc0-c286-480b-81bc-ee401b139e41.PNG)
+
 
 2. Create an **encryption-config.yaml** file as [documented by kubernetes](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/#understanding-the-encryption-at-rest-configuration)
 ```
@@ -909,7 +923,8 @@ master_3_ip=$(aws ec2 describe-instances \
 ssh -i k8s-cluster-from-ground-up.id_rsa ubuntu@${master_3_ip}
 ```
 You should have a a similar pane like below. You should be able to see all the files that have been sent to the nodes.
-
+![pix26](https://user-images.githubusercontent.com/74002629/222406629-47dd6731-40ff-4888-996b-b4f4cb18bf82.PNG)
+	
 5. Download and install etcd
 ```
   wget -q --show-progress --https-only --timestamping \
@@ -931,6 +946,8 @@ sudo mv etcd-v3.4.15-linux-amd64/etcd* /usr/local/bin/
 }
 ```
 8. The instance internal IP address will be used to serve client requests and communicate with etcd cluster peers. Retrieve the internal IP address for the current compute instance: `export INTERNAL_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)`
+![pix28](https://user-images.githubusercontent.com/74002629/222406828-be651a44-1973-421d-8c58-462ac716c0f5.PNG)
+
 9. Each etcd member must have a unique name within an etcd cluster. Set the etcd name to node Private IP address so it will uniquely identify the machine:
 ```
 ETCD_NAME=$(curl -s http://169.254.169.254/latest/user-data/ \
@@ -938,6 +955,8 @@ ETCD_NAME=$(curl -s http://169.254.169.254/latest/user-data/ \
 
 echo ${ETCD_NAME}
 ```
+![PIX29](https://user-images.githubusercontent.com/74002629/222406879-4ee74fd2-3119-4612-8d2d-5f69bad43d12.PNG)
+
 10. Create the etcd.service systemd unit file:
 View documentation of flags [here](https://www.bookstack.cn/read/etcd-3.2.17-en/717bafd59fa87192.md)
 ```
@@ -1021,7 +1040,7 @@ encryption-config.yaml /var/lib/kubernetes/
 }
 ```
 5.The instance internal IP address will be used to advertise the API Server to members of the cluster. Retrieve the internal IP address for the current compute instance: `export INTERNAL_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)`
-6. Create the kube-apiserver.service systemd unit file: Read about each startup flag used in below systemd file from the documentation [here](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/)
+6. Create the kube-apiserver.service systemd unit file. Read about each startup flag used in below systemd file from the documentation [here](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/)
 ```
 cat <<EOF | sudo tee /etc/systemd/system/kube-apiserver.service
 [Unit]
