@@ -1,4 +1,6 @@
-Prerequisite: Install required client tools. You will need to install the following tools:
+![Capture](https://user-images.githubusercontent.com/74002629/222482683-1f20c19c-c2a3-4ff3-97e1-18c91ce94f02.PNG)
+
+Prerequisite: Install required client tools. You will need to install the following tools on your Linux server:
 1.	awscli – to be used to manage your AWS services
 2.	kubectl – this command line utility will be your main control tool to manage your K8s cluster.
 3.	cfssl – a Cloudflare open source toolkit for everything TLS/SSL 
