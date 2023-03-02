@@ -1167,7 +1167,7 @@ To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 2. To get the current namespaces: `kubectl get namespaces --kubeconfig admin.kubeconfig`
 3. To reach the Kubernetes API Server publicly: `curl --cacert /var/lib/kubernetes/ca.pem https://$INTERNAL_IP:6443/version`
 OUTPUT:
-
+```
 {
   "major": "1",
   "minor": "21",
@@ -1179,6 +1179,7 @@ OUTPUT:
   "compiler": "gc",
   "platform": "linux/amd64"
 }
+```
 4. To get the status of each component: `kubectl get componentstatuses --kubeconfig admin.kubeconfig`
 5. Next, configure Role based Access Control (RBAC) on one of the controller nodes to ensure the api-server has necessary authorization for the kubelet.
 Create the ClusterRole:
@@ -1223,3 +1224,172 @@ subjects:
     name: kubernetes
 EOF
 ```
+### Step 9- CONFIGURE THE KUBERNETES WORKER NODES
+Before we begin to bootstrap the worker nodes, it is important to note that the K8s API Server authenticates to the kubelet as the kubernetes user using the same kubernetes.pem certificate. Therefore we will need to configure Role Based Access (RBAC) for Kubelet Authorization to allow API server to retrieve metrics, logs, and executing commands in pods.
+
+1. Create the **system:kube-apiserver-to-kubelet** ClusterRole with permissions to access the Kubelet API and perform most common tasks associated with managing pods on the worker nodes. Run the below script on the Controller node:
+```
+cat <<EOF | kubectl apply --kubeconfig admin.kubeconfig -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+  name: system:kube-apiserver-to-kubelet
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes/proxy
+      - nodes/stats
+      - nodes/log
+      - nodes/spec
+      - nodes/metrics
+    verbs:
+      - "*"
+EOF
+```
+2. Bind the **system:kube-apiserver-to-kubelet** ClusterRole to the kubernetes user so that API server can authenticate successfully to the kubelets on the worker nodes:
+```
+cat <<EOF | kubectl apply --kubeconfig admin.kubeconfig -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:kube-apiserver
+  namespace: ""
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:kube-apiserver-to-kubelet
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: kubernetes
+EOF
+```
+3. Bootstraping components on the worker nodes. We need to install the following components on each node: Kubelet, Kube-proxy, Containerd or Docker and Networking plugins. To begin, SSH into the worker nodes:
+```
+Worker-1
+
+worker_1_ip=$(aws ec2 describe-instances \
+--filters "Name=tag:Name,Values=${NAME}-worker-0" \
+--output text --query 'Reservations[].Instances[].PublicIpAddress')
+ssh -i k8s-cluster-from-ground-up.id_rsa ubuntu@${worker_1_ip}
+Worker-2
+
+worker_2_ip=$(aws ec2 describe-instances \
+--filters "Name=tag:Name,Values=${NAME}-worker-1" \
+--output text --query 'Reservations[].Instances[].PublicIpAddress')
+ssh -i k8s-cluster-from-ground-up.id_rsa ubuntu@${worker_2_ip}
+Worker-3
+
+worker_3_ip=$(aws ec2 describe-instances \
+--filters "Name=tag:Name,Values=${NAME}-worker-2" \
+--output text --query 'Reservations[].Instances[].PublicIpAddress')
+ssh -i k8s-cluster-from-ground-up.id_rsa ubuntu@${worker_3_ip}
+```
+4. Install OS dependencies(socat, conntrack and ipset):
+```
+{
+  sudo apt-get update
+  sudo apt-get -y install socat conntrack ipset
+}
+```
+5. Disable Swap. If swap is not disabled, kubelet will not start. Test if swap is already enabled on the host: `sudo swapon --show`
+If there is no output, then you are good to go. Otherwise, run below command to turn it off: `sudo swapoff -a`
+
+6. Download and install a container runtime(Docker Or Containerd). Docker is now deprecated, and Kubernetes no longer supports the Dockershim codebase from v1.20 release. We will be using Containerd for our container runtime. Download binaries for runc, cri-ctl, and containerd:
+```
+ wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc93/runc.amd64 \
+  https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.21.0/crictl-v1.21.0-linux-amd64.tar.gz \
+  https://github.com/containerd/containerd/releases/download/v1.4.4/containerd-1.4.4-linux-amd64.tar.gz 
+```
+7. Configure containerd:
+```
+{
+  mkdir containerd
+  tar -xvf crictl-v1.21.0-linux-amd64.tar.gz
+  tar -xvf containerd-1.4.4-linux-amd64.tar.gz -C containerd
+  sudo mv runc.amd64 runc
+  chmod +x  crictl runc  
+  sudo mv crictl runc /usr/local/bin/
+  sudo mv containerd/bin/* /bin/
+}
+```
+`sudo mkdir -p /etc/containerd/`
+```
+cat << EOF | sudo tee /etc/containerd/config.toml
+[plugins]
+  [plugins.cri.containerd]
+    snapshotter = "overlayfs"
+    [plugins.cri.containerd.default_runtime]
+      runtime_type = "io.containerd.runtime.v1.linux"
+      runtime_engine = "/usr/local/bin/runc"
+      runtime_root = ""
+EOF
+```
+8. Create the containerd.service systemd unit file:
+```
+cat <<EOF | sudo tee /etc/systemd/system/containerd.service
+[Unit]
+Description=containerd container runtime
+Documentation=https://containerd.io
+After=network.target
+
+[Service]
+ExecStartPre=/sbin/modprobe overlay
+ExecStart=/bin/containerd
+Restart=always
+RestartSec=5
+Delegate=yes
+KillMode=process
+OOMScoreAdjust=-999
+LimitNOFILE=1048576
+LimitNPROC=infinity
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+9. Create directories to configure kubelet, kube-proxy, cni, and a directory to keep the kubernetes root ca file:
+```
+sudo mkdir -p \
+  /var/lib/kubelet \
+  /var/lib/kube-proxy \
+  /etc/cni/net.d \
+  /opt/cni/bin \
+  /var/lib/kubernetes \
+  /var/run/kubernetes
+```
+10. Download and Install CNI(Container Network Interface), a Cloud Native Computing Foundation project, that consists of a specification and libraries for writing plugins to configure network interfaces in Linux containers. It also comes with a number of plugins. Kubernetes uses CNI as an interface between network providers and Kubernetes Pod networking. Network providers create network plugin that can be used to implement the Kubernetes networking, and includes additional set of rich features that Kubernetes does not provide out of the box.
+
+Download the plugins available from containernetworking’s GitHub repo and read more about CNIs and why it is being developed.
+```
+wget -q --show-progress --https-only --timestamping \
+  https://github.com/containernetworking/plugins/releases/download/v0.9.1/cni-plugins-linux-amd64-v0.9.1.tgz
+```
+11. Install CNI into /opt/cni/bin/
+```
+sudo tar -xvf cni-plugins-linux-amd64-v0.9.1.tgz -C /opt/cni/bin/
+```
+Your output shouls show the plugins that comes with the CNI:
+	
+12. Download binaries for kubectl, kube-proxy, and kubelet
+```
+wget -q --show-progress --https-only --timestamping \
+  https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubectl \
+  https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kube-proxy \
+  https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubelet
+```
+13. Install the downloaded binaries
+```
+{
+  chmod +x  kubectl kube-proxy kubelet  
+  sudo mv  kubectl kube-proxy kubelet /usr/local/bin/
+}
+```
+
+	
