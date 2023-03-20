@@ -9,7 +9,7 @@ created block devices are names **xvdf, xvdh, xvdg**
 ![pix 2](https://user-images.githubusercontent.com/74002629/182373755-c02f2da2-046b-40d0-b95e-c389fa3ce9e4.PNG)
 
 5. Use gdisk utility to create a single partition on each of the 3 disks `sudo gdisk /dev/xvdf`
-6. A prompt pops up, type **n** to create new partition, enter no of partition(1), hex code is **8e00**, **p** to view partition and **w** to save newly created partition.
+6. A prompt pops up, type: **n** to create new partition. Enter the number of partition(in my case 1). Hex code is **8e00**. Type: **p** to view partition and finally **w** to save newly created partition.
 7. Repeat this process for the other remaining block devices.
 8. Type **lsblk** to view newly created partition.
 ![pix4](https://user-images.githubusercontent.com/74002629/182373794-69594381-2aeb-44f6-8b82-ac8565a82952.PNG)
