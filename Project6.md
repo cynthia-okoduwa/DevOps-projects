@@ -9,7 +9,7 @@ created block devices are names **xvdf, xvdh, xvdg**
 ![pix 2](https://user-images.githubusercontent.com/74002629/182373755-c02f2da2-046b-40d0-b95e-c389fa3ce9e4.PNG)
 
 5. Use gdisk utility to create a single partition on each of the 3 disks `sudo gdisk /dev/xvdf`
-6. A prompt pops up, type: **n** to create new partition. Enter the number of partition(in my case 1). Hex code is **8e00**. Type: **p** to view partition and finally **w** to save newly created partition.
+6. A prompt pops up, type `n`, to create new partition. Enter the number of partition(in my case 1). Hex code is **8e00**. Type `p`, to view partition and finally `w`, to save newly created partition.
 7. Repeat this process for the other remaining block devices.
 8. Type **lsblk** to view newly created partition.
 ![pix4](https://user-images.githubusercontent.com/74002629/182373794-69594381-2aeb-44f6-8b82-ac8565a82952.PNG)
@@ -28,7 +28,7 @@ sudo pvcreate /dev/xvdh1
 13. View newly created volume group type: `sudo vgs`
 ![pix8](https://user-images.githubusercontent.com/74002629/182373911-ac764044-c860-4b5e-9957-f1135dfe570f.PNG)
 
-14. Create 2 logical volumes using lvcreate utility. Name them: **apps-lv** for storing data for the Website and **logs-lv** for storing data for logs.
+14. Create 2 logical volumes using lvcreate utility. Name them: `apps-lv` for storing data for the Website and `logs-lv` for storing data for logs.
 ```
 sudo lvcreate -n apps-lv -L 14G webdata-vg
 sudo lvcreate -n logs-lv -L 14G webdata-vg
@@ -43,15 +43,15 @@ sudo mkfs -t ext4 /dev/webdata-vg/logs-lv
 ```
 ![pix11](https://user-images.githubusercontent.com/74002629/182375321-78581a9b-8389-403a-91ff-653f04164f0b.PNG)
 
-17. Next, create mount points for logical volumes. Create **/var/www/html** directory to store website files: `sudo mkdir -p /var/www/html` and mount **/var/www/html** on Mount /var/www/html on apps-lv logical volume : `sudo mount /dev/webdata-vg/apps-lv /var/www/html/`
+17. Next, create mount points for logical volumes. Create **/var/www/html** directory to store website files: `sudo mkdir -p /var/www/html` then mount **/var/www/html**  on apps-lv logical volume : `sudo mount /dev/webdata-vg/apps-lv /var/www/html/`
 ![pix12](https://user-images.githubusercontent.com/74002629/182375326-619af95d-796d-4c85-8063-9588ff143aba.PNG)
 
-18. Then create **/home/recovery/logs** to store backup of log data: `sudo mkdir -p /home/recovery/logs` 
+18. Create **/home/recovery/logs** to store backup of log data: `sudo mkdir -p /home/recovery/logs` 
 19. Use **rsync** utility to backup all the files in the log directory **/var/log** into **/home/recovery/logs** (It is important to backup all data on the /var/log directory because all the data will be deleted during the mount process) Type the following command: `sudo rsync -av /var/log/. /home/recovery/logs/`
 20. Mount /var/log on logs-lv logical volume: `sudo mount /dev/webdata-vg/logs-lv /var/log` 
 21. Finally, restore deleted log files back into /var/log directory: `sudo rsync -av /home/recovery/logs/. /var/log`
 22. Next, update **/etc/fstab** file so that the mount configuration will persist after restart of the server.
-23. The UUID of the device will be used to update the /etc/fstab file to get the UUID type: `sudo blkid` and copy the both the apps-vg and logs-vg UUID (Excluding the double quotes)
+23. The UUID of the device will be used to update the /etc/fstab file to get the UUID type: `sudo blkid` and copy both the apps-vg and logs-vg UUID (Excluding the double quotes)
 24. Type sudo `vi /etc/fstab` to open editor and update using the UUID you copied.
 ![pix13](https://user-images.githubusercontent.com/74002629/182375342-2c0713a4-946d-4e2c-a756-84472eb1ec34.PNG)
 
@@ -110,13 +110,13 @@ sudo setsebool -P httpd_can_network_connect=1
 ```
 ![pix19](https://user-images.githubusercontent.com/74002629/182390591-c618394d-4064-47e1-bc80-971665d5fcf8.PNG)
 
-### Step 4 — Install MySQL on your DB Server EC2
-36. Runn the following:
+### Step 4 — Install MySQL on your DB Server instance
+36. Run the following:
 ```
 sudo yum update
 sudo yum install mysql-server
 ```
-37. Verify that the service is up and running by using `sudo systemctl status mysqld`. If the service is not running, restart the service and enable it so it will be running even after reboot:
+37. Verify that the service is up and running: `sudo systemctl status mysqld`. If the service is not running, restart the service and enable it so it will be running even after reboot:
 ```
 sudo systemctl restart mysqld
 sudo systemctl enable mysqld
