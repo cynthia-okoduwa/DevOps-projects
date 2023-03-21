@@ -1,3 +1,4 @@
+![Capture3](https://user-images.githubusercontent.com/74002629/226575833-7d752dee-235f-45c9-a19d-57fcdf71df2a.PNG)
 ## WEB SOLUTION WITH WORDPRESS
 ### Part 1: Configure storage subsystem for Web and Database servers based on Linux OS.
 #### Steps
