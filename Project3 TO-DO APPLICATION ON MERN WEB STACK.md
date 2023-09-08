@@ -1,4 +1,4 @@
-## SIMPLE TO-DO APPLICATION ON MERN WEB STACK
+## SIMPLE WEB STACK IMPLEMENTATION (LEMP STACK)
 ### Task - To deploy a simple To-Do application that creates To-Do lists
 ### STEP 1 – BACKEND CONFIGURATION
 #### Steps
