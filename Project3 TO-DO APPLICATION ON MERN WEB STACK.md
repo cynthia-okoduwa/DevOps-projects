@@ -242,7 +242,7 @@ console.log(`Server running on port ${port}`)
 * Change directory to **client**: `cd client`
 * Open the package.json file: `vi package.json`
 * Add the key value pair in the package.json file `"proxy": "http://localhost:5000"` The purpose of this is to ensure access to the application directly from the browser by simply calling the server url like **http://localhost:5000** rather than always including the entire path like **http://localhost:5000/api/todos**
-![Project3pix16](https://user-images.githubusercontent.com/74002629/178157406-6c92c69c-17ab-46b5-ba89-c3f1a8b8f58c.PNG)
+![Project3pix16](https://user-images.githubusercontent.com/74002629/178157406-6c92c69c-17ab-46b5-ba89-c3f1a8b8f58c.PNG) #in the screen shot you shared of this file, there are more in it than the key value pair of `"proxy": "http://localhost:5000"`. how does one get the full file configuration?
 
 * Navigate to the Todo directory and run: **npm run dev** The app should open and start running on localhost:3000
 ![Project3pix17](https://user-images.githubusercontent.com/74002629/178157411-9c42cf2a-e341-4354-adb4-877143615238.PNG)
