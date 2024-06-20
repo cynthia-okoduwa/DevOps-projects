@@ -2,25 +2,25 @@
 ### Project overview
 The following are the objectives of this project:
 1. **Setup Jenkins along with Docker Server (DIND) as your Continuous Integration Environment**: configure plugins, admin user and get Jenkins ready to start building your CI workflows. This setup will allow you to leverage Docker-in-Docker (DIND) to manage and run your builds within isolated containers, ensuring a clean and consistent environment for every build.
-2. **Create a pipeline for a maven project**: Manually develop a Jenkins pipeline for build, test, and deployment processes of a Maven project. This step will help you understand the steps and congfigurations required to setup a pipeline from scratch.
+2. **Create a pipeline for a Maven project**: Manually develop a Jenkins pipeline for build, test, and deployment processes of a Maven project. This step will help you understand the steps and configurations required to set up a pipeline from scratch.
 3. **Configure artifact versioning**: Implement a versioning strategy for your build artifacts. This ensures that each build is uniquely identifiable, facilitating easier tracking, rollback, and deployment of specific versions.
-4. **Connecting jobs with Upstreams and Downstreams**: Link various jobs to create a dependency chain, where the output of one job can trigger the next in sequence. This allows for complex workflows and better coordination between different stages of your CI/CD pipeline.
+4. **Connecting jobs with Upstream and Downstream**: Link various jobs to create a dependency chain, where the output of one job can trigger the next in sequence. This allows for complex workflows and better coordination between different stages of your CI/CD pipeline.
 5. **Create a pipeline view for your pipeline**: Visualize your entire CI/CD process with a pipeline view. This provides a clear and comprehensive overview of the build stages, job statuses, and helps in identifying bottlenecks or failures quickly.
 # Step 1
 ## Set up Jenkins server Docker(DIND)
 There are various options for setting up a Jenkins environment, such as setting it up on Windows or Linux-based systems, or on a virtual machine (VM). In this project, I will be setting up Jenkins using Docker. This option offers the flexibility and convenience of a containerized environment, allowing you to continuously use your environment for as long as you want for your CI/CD practice.
 
 To get started, you'll need to have Docker Engine installed on your local machine or VM. Once Docker is installed, you can set up the Jenkins server inside a Docker container. This approach simplifies the setup process and ensures that your Jenkins environment is consistent and easily replicable.
-1. To install Docker engine go to [Get Docker](https://docs.docker.com/get-docker/) and select the best installation path for you.
-2. Start by validing your environment with:
+1. To install the Docker engine go to [Get Docker](https://docs.docker.com/get-docker/) and select the best installation path for you.
+2. Start by validating your environment with:
 ```
 docker version
 docker-compose
 ```
-The first command will show you both client and server information and the second command will return the help menu for docker compose, which validates that you have Doker installed, started and
+The first command will show you both client and server information and the second command will return the help menu for docker-compose, which validates that you have Docker installed, started and
 docker-compose ready to go.
 
-3.  Launch a Jenkins container on your docker host by using recommended Jenkins image similar to whats recommended in the official documentation [Docker](https://www.jenkins.io/doc/book/installing/docker/) using the following sequence of commands.
+3.  Launch a Jenkins container on your docker host by using the recommended Jenkins image similar to what is recommended in the official documentation [Docker](https://www.jenkins.io/doc/book/installing/docker/) using the following sequence of commands.
 ```
 git clone https://github.com/udbc/bootcamp.git
 cd bootcamp/jenkins
@@ -28,7 +28,7 @@ docker-compose up -d
 ```
 The first command clones the repository that will help you set up your environment quickly. It provides a declarative approach to setting up the environment you need. The next command changes your directory to where your Jenkins folder is located. When you run the third command, it will read the Dockerfile and build the custom Jenkins image with all the required plugins (including Blue Ocean) and configurations.
 
-4. Validate that Jenkins is setup along with Docker using the following command:
+4. Validate that Jenkins is set up along with Docker using the following command:
 ```
 docker-compose ps
 ```
@@ -57,24 +57,24 @@ When setting up your continuous Integration workflows, there will be instances w
 ```
 docker-compose stop
 ```
-You can restart your enviroment by using:
+You can restart your environment by using:
 ```
 docker-compose up -d
 ```
 
 # Step 2
-## Set up pipeline for Maven project.
+## Set up a pipeline for Maven project.
 
-In this step, I will begin the process of building a pipeline for a Java application that uses Maven as a build tool. Before starting to build the pipeline, first fork the Github repository of the application code [here](https://github.com/udbc/sysfoo)
+In this step, I will begin the process of building a pipeline for a Java application that uses Maven as a build tool. Before starting to build the pipeline, first fork the GitHub repository of the application code [here](https://github.com/udbc/sysfoo)
 
 ### Set up Build Job
 
-1. Go to *Manage Jenkins* then click on *Global tools* configuration and under *Maven* section, provide name as **Maven** and select the maven version
+1. Go to *Manage Jenkins* then click on *Global tools* configuration and under *Maven* section, provide the name as **Maven** and select the Maven version
 **3.9.6** then save the changes.
 
 ![Screenshot 2024-06-09 061346](https://github.com/cynthia-okoduwa/DevOps-projects/assets/74002629/e62a9f19-dff2-4ff0-962a-0521748c5794)
 
-2. Next, install **Maven integration plugin**. Go to **Manage Jenkins** then click on **Manage Plugins**, **Available plugins**, search for **Maven Integration plugin** and install it without restart. Once installed click on **Go back to the top page** to return to Jenkins main page.
+2. Next, install **Maven integration plugin**. Go to **Manage Jenkins** then click on **Manage Plugins**, **Available plugins**, search for **Maven Integration plugin** and install it without restart. Once installed click on **Go back to the top page** to return to Jenkins' main page.
 3. From the Jenkins main page, create a new folder that will serve as a namespace. Do so by creating a **new item**, with type **folder** with name **sysfoo** then click **ok**.
 4. On the next page, leave all other configurations as is and click save to proceed. That creates a folder by name sysfoo.
 
@@ -111,7 +111,7 @@ The next job is package, this job will compile the application and then generate
 
 ![Screenshot 2024-06-11 075842](https://github.com/cynthia-okoduwa/DevOps-projects/assets/74002629/65ff7b32-19ea-4b4b-8404-71e33b904db4)
 
-4. After a build successful, it will create a *jar* file, you will find the jar file created in the *Workspace* target directory. Verify the jar file was created by clicking on workspace
+4. If the build is successful, it will create a *jar* file, you will find the jar file created in the *Workspace* target directory. Verify the jar file was created by clicking on workspace
 
 ![Screenshot 2024-06-11 080731](https://github.com/cynthia-okoduwa/DevOps-projects/assets/74002629/87c92b6b-d2f3-4969-804a-7a13d32bd61f)
 
